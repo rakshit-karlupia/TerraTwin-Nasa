@@ -151,24 +151,59 @@ export function computeSlopeGrid(demData, cellSizeMeters = 30) {
 
 /**
  * Extracts a terrain elevation cross-section line profile across the DEM
+ * Supports directions: 'WE' (West-East), 'NS' (North-South), 'diagonal' (NW-SE), 'radial'
  */
-export function extractCrossSectionProfile(demData, samplesCount = 64) {
+export function extractCrossSectionProfile(demData, samplesCount = 64, direction = 'WE') {
   const { gridSize, elevations, minElev, maxElev } = demData;
   const profile = [];
+  const transectLengthKm = 25.0; // 25 km standard transect window
+  const half = Math.floor(gridSize / 2);
 
-  // Slice from top-left (y=15, x=15) to bottom-right (y=112, x=112)
+  let prevElev = null;
+
   for (let i = 0; i < samplesCount; i++) {
     const t = i / (samplesCount - 1);
-    const x = Math.floor(15 + t * (gridSize - 30));
-    const y = Math.floor(15 + t * (gridSize - 30));
+    let x, y;
 
-    const elev = elevations[y * gridSize + x] || minElev;
-    const distanceKm = Number((t * 24.5).toFixed(2)); // Standard 25 km transect
+    if (direction === 'WE') {
+      // West to East across center
+      x = Math.floor(10 + t * (gridSize - 20));
+      y = half;
+    } else if (direction === 'NS') {
+      // North to South across center
+      x = half;
+      y = Math.floor(10 + t * (gridSize - 20));
+    } else if (direction === 'radial') {
+      // Center outwards (0 km at center, 25 km at periphery)
+      const angle = 0.785; // 45 deg
+      const radius = t * (half - 15);
+      x = Math.floor(half + Math.cos(angle) * radius);
+      y = Math.floor(half + Math.sin(angle) * radius);
+    } else {
+      // NW to SE diagonal
+      x = Math.floor(12 + t * (gridSize - 24));
+      y = Math.floor(12 + t * (gridSize - 24));
+    }
+
+    x = Math.max(0, Math.min(gridSize - 1, x));
+    y = Math.max(0, Math.min(gridSize - 1, y));
+
+    const elev = elevations[y * gridSize + x] !== undefined ? elevations[y * gridSize + x] : minElev;
+    const distanceKm = Number((t * transectLengthKm).toFixed(2));
+
+    // Calculate slope relative to previous step
+    let localSlope = 2.5;
+    if (prevElev !== null) {
+      const stepDistMeters = (transectLengthKm * 1000) / (samplesCount - 1);
+      const dElev = Math.abs(elev - prevElev);
+      localSlope = Number((Math.atan(dElev / stepDistMeters) * (180 / Math.PI)).toFixed(1));
+    }
+    prevElev = elev;
 
     profile.push({
       distanceKm,
       elevationM: Math.round(elev),
-      slopeDeg: Number((Math.abs(elev - minElev) / (maxElev - minElev) * 25).toFixed(1))
+      slopeDeg: Math.min(55, localSlope)
     });
   }
 

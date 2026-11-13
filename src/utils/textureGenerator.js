@@ -372,3 +372,129 @@ export function createBumpTexture(width = 1024, height = 512, octaves = 5) {
   texture.wrapT = THREE.ClampToEdgeWrapping;
   return texture;
 }
+
+/**
+ * Creates Scientific Thematic Overlay Textures
+ * Supports: 'elevation', 'slope', 'thermal', 'waterIce', 'roughness'
+ */
+export function createScientificLayerTexture(planetId = 'mars', layerType = 'elevation', width = 1024, height = 512) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.createImageData(width, height);
+  const data = imgData.data;
+
+  const isMoon = planetId === 'moon';
+  const isMars = planetId === 'mars';
+
+  for (let y = 0; y < height; y++) {
+    const lat = (0.5 - y / height) * Math.PI;
+    const cosLat = Math.cos(lat);
+
+    for (let x = 0; x < width; x++) {
+      const lon = (x / width) * 2 * Math.PI;
+      const idx = (y * width + x) * 4;
+
+      const scale = isMoon ? 3.5 : 3.0;
+      const nx = Math.cos(lon) * cosLat * scale;
+      const ny = Math.sin(lat) * scale;
+      const nz = Math.sin(lon) * cosLat * scale;
+
+      const elev = fbm(nx + (isMoon ? 20 : 10), ny + nz + (isMoon ? 20 : 10), 6);
+
+      if (layerType === 'elevation') {
+        // MOLA / LOLA Rainbow Hypsometric Tint
+        // Blue -> Cyan -> Green -> Yellow -> Red -> White
+        if (elev < 0.25) {
+          const t = elev / 0.25;
+          data[idx] = Math.floor(40 * (1 - t));
+          data[idx + 1] = Math.floor(30 + t * 120);
+          data[idx + 2] = Math.floor(150 + t * 105);
+        } else if (elev < 0.5) {
+          const t = (elev - 0.25) / 0.25;
+          data[idx] = Math.floor(t * 50);
+          data[idx + 1] = Math.floor(150 + t * 105);
+          data[idx + 2] = Math.floor(255 * (1 - t));
+        } else if (elev < 0.75) {
+          const t = (elev - 0.5) / 0.25;
+          data[idx] = Math.floor(50 + t * 205);
+          data[idx + 1] = 255;
+          data[idx + 2] = 0;
+        } else {
+          const t = (elev - 0.75) / 0.25;
+          data[idx] = 255;
+          data[idx + 1] = Math.floor(255 * (1 - t * 0.8));
+          data[idx + 2] = Math.floor(t * 240);
+        }
+        data[idx + 3] = 255;
+
+      } else if (layerType === 'slope') {
+        // Geotechnical Slope Hazard Map
+        const nElev = fbm(nx * 1.05, ny * 1.05 + nz * 1.05, 5);
+        const grad = Math.min(1.0, Math.abs(elev - nElev) * 6.5);
+
+        if (grad < 0.25) {
+          data[idx] = 0;
+          data[idx + 1] = 230;
+          data[idx + 2] = 118;
+        } else if (grad < 0.6) {
+          data[idx] = 255;
+          data[idx + 1] = 214;
+          data[idx + 2] = 0;
+        } else {
+          data[idx] = 221;
+          data[idx + 1] = 44;
+          data[idx + 2] = 0;
+        }
+        data[idx + 3] = 255;
+
+      } else if (layerType === 'thermal') {
+        // Thermal Inertia false color map (Diviner / THEMIS)
+        const latEffect = Math.cos(lat);
+        const ti = Math.min(1.0, (elev * 0.4 + latEffect * 0.6));
+
+        data[idx] = Math.floor(Math.min(255, 30 + ti * 225));
+        data[idx + 1] = Math.floor(Math.min(255, ti > 0.4 ? (ti - 0.4) * 350 : 10));
+        data[idx + 2] = Math.floor(Math.min(255, ti < 0.5 ? 180 - ti * 200 : ti * 100));
+        data[idx + 3] = 255;
+
+      } else if (layerType === 'waterIce') {
+        // Volatile / PSR Water-Ice proxy
+        const isPole = Math.abs(lat) > 1.35;
+        const coldTrap = isMoon
+          ? (isPole && elev < 0.42 ? 0.95 : isPole ? 0.45 : 0.05)
+          : (isPole ? 0.90 : (lat > 0.6 && elev < 0.38 ? 0.65 : 0.05));
+
+        if (coldTrap > 0.5) {
+          const t = (coldTrap - 0.5) / 0.5;
+          data[idx] = Math.floor(6 + t * 200);
+          data[idx + 1] = Math.floor(182 + t * 73);
+          data[idx + 2] = Math.floor(212 + t * 43);
+          data[idx + 3] = 240;
+        } else {
+          data[idx] = 5;
+          data[idx + 1] = 15;
+          data[idx + 2] = 25;
+          data[idx + 3] = 220;
+        }
+
+      } else if (layerType === 'roughness') {
+        // Surface Roughness / Boulder density index
+        const roughNoise = smoothNoise(nx * 14, ny * 14 + nz * 14);
+        const rIndex = (roughNoise + elev * 0.3) / 1.3;
+
+        data[idx] = Math.floor(20 + rIndex * 220);
+        data[idx + 1] = Math.floor(20 + rIndex * 140);
+        data[idx + 2] = Math.floor(20 + rIndex * 40);
+        data[idx + 3] = 255;
+      }
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  return texture;
+}

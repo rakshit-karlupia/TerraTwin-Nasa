@@ -21,6 +21,18 @@ export const MARS_REGIONS = [
     geology: 'Ancient lake basin fed by Neretva Vallis delta; rich in smectite clay, olivine, carbonates, and preserved lacustrine mudstones.',
     dataSources: ['MRO HiRISE (0.25m)', 'MRO CRISM', 'MRO CTX', 'MGS MOLA', 'Perseverance MEDA'],
     keyHazards: ['Delta scarps and sand ripples (megaripples) causing mobility entrapment', 'Boulder-strewn delta front'],
+    images: [
+      {
+        type: 'Orbital View',
+        title: 'MRO HiRISE Jezero Crater Delta Deposits',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Jezero_crater_delta_HiRISE.jpg/800px-Jezero_crater_delta_HiRISE.jpg',
+        mission: 'Mars Reconnaissance Orbiter (MRO)',
+        instrument: 'HiRISE (High Resolution Imaging Science Experiment)',
+        resolution: '0.25 m/pixel',
+        footprint: '18.38°N, 77.58°E (12 km x 8 km)',
+        credit: 'NASA / JPL-Caltech / Univ. of Arizona'
+      }
+    ],
     summary: 'A premier astrobiological exploration zone. Ancient fluvial channels brought sediment into a standing crater lake ~3.7 billion years ago, preserving clay minerals with high biosignature preservation potential.'
   },
   {
@@ -45,6 +57,18 @@ export const MARS_REGIONS = [
     geology: 'Smooth volcanic flood plains blanketed with loess dust and widespread subsurface cryogenic water-ice sheets.',
     dataSources: ['MRO SHARAD Radar', 'Mars Odyssey GRS/HEND', 'MGS MOLA', 'MRO CTX'],
     keyHazards: ['Seasonal frost deposition', 'High atmospheric entry heating due to northern latitude dust variability'],
+    images: [
+      {
+        type: 'Orbital View',
+        title: 'MRO HiRISE Arcadia Cryogenic Ice Plains',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Arcadia_Planitia_HiRISE.jpg/800px-Arcadia_Planitia_HiRISE.jpg',
+        mission: 'Mars Reconnaissance Orbiter (MRO)',
+        instrument: 'HiRISE',
+        resolution: '0.5 m/pixel',
+        footprint: '39.3°N, 189.7°E',
+        credit: 'NASA / JPL / Univ. of Arizona'
+      }
+    ],
     summary: 'The leading candidate for human mission ISRU (In-Situ Resource Utilization). Extensive, pure water ice sheets exist just 1 to 5 meters beneath the surface, accessible via mechanical trenching.'
   },
   {
@@ -69,6 +93,18 @@ export const MARS_REGIONS = [
     geology: 'Layered central sedimentary mound (Mount Sharp) recording over 1 billion years of transition from wet clay environments to arid sulfates.',
     dataSources: ['Curiosity REMS', 'MRO HiRISE', 'MRO CRISM', 'MGS MOLA'],
     keyHazards: ['Active migrating sand dune fields (Bagnold Dunes)', 'Steep slopes on upper Mt. Sharp'],
+    images: [
+      {
+        type: 'Orbital View',
+        title: 'MRO CTX Regional View of Gale Crater & Mount Sharp',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Gale_Crater_from_orbit.jpg/800px-Gale_Crater_from_orbit.jpg',
+        mission: 'Mars Reconnaissance Orbiter (MRO)',
+        instrument: 'CTX (Context Camera)',
+        resolution: '6.0 m/pixel',
+        footprint: '5.4°S, 137.8°E (154 km diameter)',
+        credit: 'NASA / JPL / Malin Space Science Systems'
+      }
+    ],
     summary: 'Deep topographic depression with dense atmosphere (840 Pa), providing higher aerodynamic braking safety margins. Contains stratified geological records of Martian climate evolution.'
   },
   {

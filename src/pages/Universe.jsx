@@ -151,27 +151,27 @@ export default function Universe({ setActivePlanet, setView }) {
                 setActivePlanet('earth');
                 setView('explorer');
               }}
-              className="py-1.5 rounded bg-space-900 hover:bg-space-800 text-cyan-300 border border-cyan-800/50"
+              className="py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500 text-cyan-300 hover:text-black font-bold border border-cyan-500/40 shadow-glow-cyan transition-all"
             >
-              Earth
+              🌍 Earth
             </button>
             <button
               onClick={() => {
                 setActivePlanet('moon');
                 setView('explorer');
               }}
-              className="py-1.5 rounded bg-space-900 hover:bg-space-800 text-slate-300 border border-slate-700"
+              className="py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-200 text-slate-300 hover:text-black font-bold border border-slate-500/40 shadow-glow-lunar transition-all"
             >
-              Moon
+              🌕 Moon
             </button>
             <button
               onClick={() => {
                 setActivePlanet('mars');
                 setView('explorer');
               }}
-              className="py-1.5 rounded bg-space-900 hover:bg-space-800 text-mars-glow border border-mars-rust/50"
+              className="py-1.5 rounded-lg bg-red-950/50 hover:bg-red-600 text-red-300 hover:text-white font-bold border border-red-500/40 shadow-glow-mars transition-all"
             >
-              Mars
+              🔴 Mars
             </button>
           </div>
         </div>

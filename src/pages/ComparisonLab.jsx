@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { GitCompare, Download, Layers, ShieldCheck, Mountain, Compass, Thermometer, Droplets, Info } from 'lucide-react';
+import { GitCompare, Download, Layers, ShieldCheck, Mountain, Compass, Thermometer, Droplets, Info, ArrowRightLeft } from 'lucide-react';
 import { LUNAR_REGIONS } from '../data/lunarRegions';
 import { MARS_REGIONS } from '../data/marsRegions';
 import { EARTH_CANDIDATES } from '../data/earthCandidates';
-import { formatCoordinates } from '../utils/coordinates';
+import { formatCoordinates, getCRSByPlanet } from '../utils/coordinates';
 import { evaluateCandidateSimilarity, DEFAULT_FEATURE_WEIGHTS } from '../utils/scoring';
 import { generateRegionDEM, extractCrossSectionProfile } from '../utils/demProcessor';
 import RadarChart from '../components/charts/RadarChart';
 import TerrainCrossSectionChart from '../components/charts/TerrainCrossSectionChart';
 import TerrainRenderer from '../three/TerrainRenderer';
+import ImageComparisonSlider from '../components/location/ImageComparisonSlider';
 
 export default function ComparisonLab({
   targetReference,
@@ -32,6 +33,8 @@ export default function ComparisonLab({
   );
 
   const [activeTerrainMode, setActiveTerrainMode] = useState('profile'); // 'profile' or '3d'
+  const [activeDemTarget, setActiveDemTarget] = useState('A'); // 'A' or 'B'
+  const [transectDirection, setTransectDirection] = useState('WE');
 
   const siteA = useMemo(() => allSites.find(s => s.id === siteAId) || allSites[0], [allSites, siteAId]);
   const siteB = useMemo(() => allSites.find(s => s.id === siteBId) || allSites[1], [allSites, siteBId]);
@@ -44,13 +47,13 @@ export default function ComparisonLab({
   // Elevation Cross-Section profiles for both sites
   const profileA = useMemo(() => {
     const dem = generateRegionDEM(siteA.id, 128);
-    return extractCrossSectionProfile(dem, 64);
-  }, [siteA]);
+    return extractCrossSectionProfile(dem, 64, transectDirection);
+  }, [siteA, transectDirection]);
 
   const profileB = useMemo(() => {
     const dem = generateRegionDEM(siteB.id, 128);
-    return extractCrossSectionProfile(dem, 64);
-  }, [siteB]);
+    return extractCrossSectionProfile(dem, 64, transectDirection);
+  }, [siteB, transectDirection]);
 
   // Downloadable report handler (JSON research artifact)
   const handleExportReport = () => {
@@ -76,6 +79,15 @@ export default function ComparisonLab({
     URL.revokeObjectURL(url);
   };
 
+  const crsA = getCRSByPlanet(siteA.body.toLowerCase());
+  const crsB = getCRSByPlanet(siteB.body.toLowerCase());
+
+  // Calculate parameter deltas
+  const elevDelta = Math.abs((siteA.elevationM ?? 0) - (siteB.elevationM ?? 0));
+  const slopeDelta = Math.abs((siteA.slopeDeg ?? 0) - (siteB.slopeDeg ?? 0)).toFixed(1);
+  const roughnessDelta = Math.abs((siteA.roughness ?? 0.35) - (siteB.roughness ?? 0.35)).toFixed(2);
+  const reliefDelta = Math.abs((siteA.reliefM ?? 500) - (siteB.reliefM ?? 500));
+
   return (
     <div className="min-h-screen bg-space-950 text-slate-100 py-8 px-4 sm:px-6 lg:px-8 select-none">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -90,7 +102,7 @@ export default function ComparisonLab({
               Multi-Body Environmental Comparison
             </h1>
             <p className="text-sm text-slate-400 mt-1 max-w-3xl font-sans">
-              Perform rigorous side-by-side scientific evaluations across Moon vs Moon, Mars vs Mars, and Planetary vs Earth analog locations.
+              Perform rigorous side-by-side scientific evaluations across Moon vs Moon, Mars vs Mars, and Planetary vs Earth analog locations with synchronized imagery and telemetry.
             </p>
           </div>
 
@@ -139,6 +151,33 @@ export default function ComparisonLab({
                 </option>
               ))}
             </select>
+          </div>
+        </div>
+
+        {/* FEATURE 8: Interactive Side-by-Side Image Comparison & Curtain Slider */}
+        <ImageComparisonSlider siteA={siteA} siteB={siteB} />
+
+        {/* Parameter Delta Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-space-900/80 p-3 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Elevation Delta (Δh)</span>
+            <span className="text-base font-bold font-mono text-white mt-0.5 block">{elevDelta} m</span>
+            <span className="text-[10px] font-mono text-cyan-400">Datum: {crsA.verticalDatum} vs {crsB.verticalDatum}</span>
+          </div>
+          <div className="bg-space-900/80 p-3 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Slope Delta (Δθ)</span>
+            <span className="text-base font-bold font-mono text-white mt-0.5 block">{slopeDelta}°</span>
+            <span className="text-[10px] font-mono text-emerald-400">{slopeDelta < 3 ? 'Close Match (<3°)' : 'Distinct Gradient'}</span>
+          </div>
+          <div className="bg-space-900/80 p-3 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Roughness Delta (ΔR)</span>
+            <span className="text-base font-bold font-mono text-white mt-0.5 block">{roughnessDelta}</span>
+            <span className="text-[10px] font-mono text-slate-400">Dimensionless index</span>
+          </div>
+          <div className="bg-space-900/80 p-3 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Relief Delta (ΔΔz)</span>
+            <span className="text-base font-bold font-mono text-white mt-0.5 block">~{reliefDelta} m</span>
+            <span className="text-[10px] font-mono text-slate-400">Across 5km window</span>
           </div>
         </div>
 
@@ -293,6 +332,8 @@ export default function ComparisonLab({
                     profile={profileA}
                     title={`${siteA.name} (${siteA.body}) Transect`}
                     height={160}
+                    direction={transectDirection}
+                    onDirectionChange={setTransectDirection}
                   />
                 </div>
                 <div className="p-3 bg-space-900/60 rounded-xl border border-slate-800">
@@ -300,15 +341,41 @@ export default function ComparisonLab({
                     profile={profileB}
                     title={`${siteB.name} (${siteB.body}) Transect`}
                     height={160}
+                    direction={transectDirection}
+                    onDirectionChange={setTransectDirection}
                   />
                 </div>
               </div>
             ) : (
-              <div className="w-full h-80 rounded-xl overflow-hidden border border-slate-800 relative">
-                <TerrainRenderer
-                  regionId={siteA.id}
-                  renderMode="elevation"
-                />
+              <div className="space-y-2">
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => setActiveDemTarget('A')}
+                    className={`px-2.5 py-1 text-[10px] font-mono rounded border transition ${
+                      activeDemTarget === 'A'
+                        ? 'bg-mars-glow text-white font-bold border-mars-glow'
+                        : 'bg-space-900 text-slate-400 border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    Target A: {siteA.name}
+                  </button>
+                  <button
+                    onClick={() => setActiveDemTarget('B')}
+                    className={`px-2.5 py-1 text-[10px] font-mono rounded border transition ${
+                      activeDemTarget === 'B'
+                        ? 'bg-cyan-500 text-black font-bold border-cyan-400'
+                        : 'bg-space-900 text-slate-400 border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    Target B: {siteB.name}
+                  </button>
+                </div>
+                <div className="w-full h-80 rounded-xl overflow-hidden border border-slate-800 relative">
+                  <TerrainRenderer
+                    regionId={activeDemTarget === 'A' ? siteA.id : siteB.id}
+                    renderMode="elevation"
+                  />
+                </div>
               </div>
             )}
           </div>

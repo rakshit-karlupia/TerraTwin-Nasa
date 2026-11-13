@@ -1,33 +1,34 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import { generateRegionDEM, computeSlopeGrid } from '../utils/demProcessor';
+import { Layers, Activity, Maximize2 } from 'lucide-react';
+import { generateRegionDEM } from '../utils/demProcessor';
 
-// Color map converters
+// Hypsometric & Slope Color Map Converters
 function getElevationColor(normalizedH, mode = 'elevation') {
   const c = new THREE.Color();
   if (mode === 'shadedRelief') {
-    c.setRGB(normalizedH, normalizedH, normalizedH);
+    c.setRGB(normalizedH * 0.9 + 0.1, normalizedH * 0.9 + 0.1, normalizedH * 0.9 + 0.1);
     return c;
   }
   if (mode === 'slope') {
-    // Green (gentle) to Yellow (moderate) to Red (steep)
-    if (normalizedH < 0.25) c.setHSL(0.33, 0.9, 0.45); // Green
-    else if (normalizedH < 0.55) c.setHSL(0.14, 0.9, 0.5); // Yellow
-    else c.setHSL(0.0, 0.9, 0.5); // Red
+    // Green (0-10° gentle) -> Yellow (10-25° moderate) -> Red (>25° steep cliff)
+    if (normalizedH < 0.25) c.setHSL(0.33, 0.9, 0.45);
+    else if (normalizedH < 0.55) c.setHSL(0.14, 0.9, 0.5);
+    else c.setHSL(0.0, 0.9, 0.5);
     return c;
   }
-  // Standard Hypsometric Rainbow / Viridis
-  if (normalizedH < 0.2) c.setRGB(0.1, 0.15, 0.5);
-  else if (normalizedH < 0.45) c.setRGB(0.1, 0.55, 0.65);
-  else if (normalizedH < 0.7) c.setRGB(0.2, 0.75, 0.35);
-  else if (normalizedH < 0.88) c.setRGB(0.85, 0.65, 0.2);
-  else c.setRGB(0.95, 0.95, 0.98);
+  // NASA Standard Planetary Hypsometric Palette
+  if (normalizedH < 0.18) c.setRGB(0.08, 0.15, 0.55); // Deep basin/trench
+  else if (normalizedH < 0.42) c.setRGB(0.10, 0.55, 0.68); // Lowland
+  else if (normalizedH < 0.68) c.setRGB(0.18, 0.75, 0.38); // Midland plateau
+  else if (normalizedH < 0.86) c.setRGB(0.88, 0.65, 0.22); // Ridge/escarpment
+  else c.setRGB(0.96, 0.96, 0.99); // Summit peak
   return c;
 }
 
-function TerrainMesh({ demData, renderMode, onProbePoint }) {
+function TerrainMesh({ demData, renderMode, wireframe = false, onProbePoint }) {
   const meshRef = useRef();
   const { gridSize, elevations, minElev, maxElev } = demData;
 
@@ -42,11 +43,11 @@ function TerrainMesh({ demData, renderMode, onProbePoint }) {
     for (let i = 0; i < pos.count; i++) {
       const elev = elevations[i] || minElev;
       const normalizedH = Math.max(0, Math.min(1, (elev - minElev) / elevRange));
-      
-      // Displace Z along plane normal
+
+      // Displace along plane normal
       pos.setZ(i, (elev - minElev) * verticalScale);
 
-      // Color mapping
+      // Vertex color assignment
       const c = getElevationColor(normalizedH, renderMode);
       colors[i * 3] = c.r;
       colors[i * 3 + 1] = c.g;
@@ -58,10 +59,16 @@ function TerrainMesh({ demData, renderMode, onProbePoint }) {
     return { geometry: geom };
   }, [demData, renderMode, gridSize, minElev, maxElev]);
 
+  // Dispose buffer geometry when component unmounts
+  useEffect(() => {
+    return () => {
+      if (geometry) geometry.dispose();
+    };
+  }, [geometry]);
+
   const handlePointerDown = (e) => {
     e.stopPropagation();
     if (e.point && onProbePoint) {
-      // Approximate probed elevation from world point Z
       const verticalScale = 3.2 / (maxElev - minElev);
       const probedElev = Math.round(minElev + (e.point.y / verticalScale));
       onProbePoint({
@@ -84,10 +91,10 @@ function TerrainMesh({ demData, renderMode, onProbePoint }) {
     >
       <meshStandardMaterial
         vertexColors
-        roughness={0.75}
-        metalness={0.15}
+        roughness={0.72}
+        metalness={0.12}
         side={THREE.DoubleSide}
-        wireframe={false}
+        wireframe={wireframe}
       />
     </mesh>
   );
@@ -96,6 +103,7 @@ function TerrainMesh({ demData, renderMode, onProbePoint }) {
 export default function TerrainRenderer({
   regionId = 'lunar-shackleton',
   renderMode = 'elevation',
+  wireframe = false,
   onProbePoint,
   className = "w-full h-full"
 }) {
@@ -123,6 +131,7 @@ export default function TerrainRenderer({
         <TerrainMesh
           demData={demData}
           renderMode={renderMode}
+          wireframe={wireframe}
           onProbePoint={onProbePoint}
         />
 
@@ -131,11 +140,28 @@ export default function TerrainRenderer({
           enableZoom={true}
           enablePan={true}
           minDistance={4}
-          maxDistance={30}
+          maxDistance={32}
           maxPolarAngle={Math.PI / 2 - 0.05}
           dampingFactor={0.08}
         />
       </Canvas>
+
+      {/* Floating Elevation Colormap Legend Overlay */}
+      <div className="absolute top-4 right-4 z-20 pointer-events-none">
+        <div className="glass-panel p-3 rounded-xl border border-cyan-500/25 text-xs font-mono space-y-1.5 shadow-xl">
+          <div className="flex items-center justify-between space-x-3 text-[10px] uppercase text-cyan-400">
+            <span>{demData.label}</span>
+          </div>
+          <div className="flex items-center space-x-2 text-[11px]">
+            <span className="text-slate-400">{demData.minElev} m</span>
+            <div className="w-24 h-2.5 rounded-full bg-gradient-to-r from-blue-700 via-emerald-500 to-amber-200 border border-slate-700" />
+            <span className="text-slate-200 font-bold">+{demData.maxElev} m</span>
+          </div>
+          <div className="text-[9px] text-slate-500">
+            Grid: {demData.gridSize}×{demData.gridSize} samples • Relief: {demData.maxElev - demData.minElev} m
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Globe, Compass, Rocket, GitCompare, Database, Info, Layers, Award, Menu, X, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Globe, Compass, Rocket, GitCompare, Database, Info, Layers, Award, Menu, X, ChevronDown, Radio } from 'lucide-react';
 
 export default function Header({ currentView, setView, activePlanet, setActivePlanet }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [missionDropdownOpen, setMissionDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const navItems = [
     { id: 'home', label: 'Home' },
@@ -27,8 +28,19 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
     { id: 'about', label: 'About' }
   ];
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setMissionDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-space-950/85 backdrop-blur-md border-b border-cyan-500/20 select-none">
+    <header className="sticky top-0 z-50 w-full bg-space-950/90 backdrop-blur-xl border-b border-cyan-500/25 shadow-lg shadow-cyan-950/20 select-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <div
@@ -36,7 +48,7 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
           className="flex items-center space-x-3 cursor-pointer group"
         >
           <div className="relative w-9 h-9 rounded-full bg-space-900 border border-cyan-400 flex items-center justify-center shadow-glow-cyan transition-transform group-hover:scale-105">
-            <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 inline-block" />
+            <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 inline-block shadow-[0_0_8px_#00f2fe]" />
             <div className="absolute inset-0 rounded-full border border-dashed border-cyan-400 animate-spin-very-slow" />
           </div>
           <div>
@@ -44,7 +56,7 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
               <span className="font-display font-extrabold tracking-wider text-lg text-white group-hover:text-cyan-300 transition">
                 TERRATWIN
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-500/40 text-cyan-300 font-bold">
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-bold tracking-wider">
                 NASA MVP
               </span>
             </div>
@@ -58,21 +70,38 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
         <nav className="hidden xl:flex items-center space-x-1 text-xs font-mono">
           {navItems.map((item) => {
             if (item.hasDropdown) {
+              const isMissionsActive =
+                currentView.includes('mission') ||
+                currentView === 'lunar-missions' ||
+                currentView === 'mars-missions';
+
               return (
-                <div key={item.id} className="relative group">
+                <div key={item.id} ref={dropdownRef} className="relative group">
                   <button
-                    onClick={() => setMissionDropdownOpen(!missionDropdownOpen)}
-                    className={`px-3 py-2 rounded-md transition flex items-center space-x-1 ${
-                      currentView.includes('mission') || currentView === 'lunar-missions' || currentView === 'mars-missions'
-                        ? 'text-cyan-300 bg-space-800/80 border border-cyan-500/30'
-                        : 'text-slate-300 hover:text-white hover:bg-space-900'
+                    onClick={() => setMissionDropdownOpen((prev) => !prev)}
+                    className={`px-3 py-2 rounded-lg transition-all flex items-center space-x-1.5 ${
+                      isMissionsActive
+                        ? 'text-cyan-300 bg-space-900/90 border border-cyan-500/40 shadow-sm shadow-cyan-500/20 font-bold'
+                        : 'text-slate-300 hover:text-white hover:bg-space-900/70'
                     }`}
                   >
                     <span>{item.label}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform" />
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                        missionDropdownOpen ? 'rotate-180 text-cyan-400' : 'group-hover:text-white'
+                      }`}
+                    />
                   </button>
 
-                  <div className="absolute top-full left-0 w-52 py-2 mt-1 glass-panel-glow rounded-lg hidden group-hover:block border border-cyan-500/30 shadow-2xl">
+                  {/* Dropdown Menu */}
+                  <div
+                    className={`absolute top-full left-0 w-60 py-2 mt-1.5 glass-panel-glow rounded-xl border border-cyan-500/30 shadow-2xl z-50 backdrop-blur-2xl transition-all duration-200 ${
+                      missionDropdownOpen ? 'block opacity-100 translate-y-0' : 'hidden group-hover:block opacity-100'
+                    }`}
+                  >
+                    <div className="px-3 py-1 text-[10px] uppercase font-mono tracking-wider text-cyan-400 border-b border-slate-800/80 mb-1">
+                      Candidate Landing Intelligence
+                    </div>
                     {item.subItems.map((sub) => (
                       <button
                         key={sub.id}
@@ -80,11 +109,14 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
                           setView(sub.id);
                           setMissionDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2 text-xs transition ${
-                          currentView === sub.id ? 'text-cyan-300 bg-cyan-950/60 font-bold' : 'text-slate-300 hover:text-white hover:bg-space-800'
+                        className={`w-full text-left px-3.5 py-2 text-xs transition flex items-center space-x-2 ${
+                          currentView === sub.id
+                            ? 'text-cyan-300 bg-cyan-950/70 font-bold border-l-2 border-cyan-400'
+                            : 'text-slate-300 hover:text-white hover:bg-space-900/80'
                         }`}
                       >
-                        {sub.label}
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400/80" />
+                        <span>{sub.label}</span>
                       </button>
                     ))}
                   </div>
@@ -96,10 +128,10 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
               <button
                 key={item.id}
                 onClick={() => setView(item.id)}
-                className={`px-3 py-2 rounded-md transition ${
+                className={`px-3 py-2 rounded-lg transition-all ${
                   currentView === item.id
-                    ? 'text-cyan-300 bg-space-800/80 border border-cyan-500/30 font-bold'
-                    : 'text-slate-300 hover:text-white hover:bg-space-900'
+                    ? 'text-cyan-300 bg-space-900/90 border border-cyan-500/40 shadow-sm shadow-cyan-500/20 font-bold'
+                    : 'text-slate-300 hover:text-white hover:bg-space-900/70'
                 }`}
               >
                 {item.label}
@@ -110,7 +142,7 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
 
         {/* Planet Quick Switcher & Telemetry Status */}
         <div className="hidden sm:flex items-center space-x-3">
-          <div className="flex items-center bg-space-900 rounded-lg p-1 border border-slate-800">
+          <div className="flex items-center bg-space-900/90 rounded-xl p-1 border border-cyan-500/20">
             {['earth', 'moon', 'mars'].map((p) => (
               <button
                 key={p}
@@ -118,9 +150,13 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
                   setActivePlanet(p);
                   if (currentView === 'home') setView('explorer');
                 }}
-                className={`px-2.5 py-1 rounded text-[11px] font-mono capitalize transition ${
+                className={`px-3 py-1 rounded-lg text-[11px] font-mono capitalize transition-all ${
                   activePlanet === p
-                    ? p === 'mars' ? 'bg-mars-glow text-white font-bold' : p === 'moon' ? 'bg-slate-300 text-black font-bold' : 'bg-cyan-500 text-black font-bold'
+                    ? p === 'mars'
+                      ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold shadow-glow-mars'
+                      : p === 'moon'
+                      ? 'bg-gradient-to-r from-slate-200 to-slate-400 text-black font-bold'
+                      : 'bg-cyan-500 text-black font-bold shadow-glow-cyan'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -130,58 +166,101 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
           </div>
 
           <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-[10px] font-mono text-emerald-400 hidden lg:inline">ONLINE</span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span className="text-[10px] font-mono text-emerald-400 hidden lg:inline tracking-wider">
+              ONLINE
+            </span>
           </div>
         </div>
 
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="xl:hidden p-2 text-slate-300 hover:text-white"
+          className="xl:hidden p-2 text-slate-300 hover:text-white rounded-lg hover:bg-space-900 transition"
+          aria-label="Toggle Navigation Menu"
         >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileMenuOpen ? <X className="w-6 h-6 text-cyan-400" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-space-950 border-b border-cyan-500/30 px-4 pt-2 pb-6 space-y-2">
-          {navItems.map((item) => (
-            <div key={item.id}>
-              {item.hasDropdown ? (
-                <div className="space-y-1">
-                  <div className="text-xs font-mono text-cyan-400 font-bold pt-2">{item.label}</div>
-                  {item.subItems.map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => {
-                        setView(sub.id);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`block w-full text-left pl-3 py-1.5 text-xs font-mono ${
-                        currentView === sub.id ? 'text-cyan-300 font-bold' : 'text-slate-300'
-                      }`}
-                    >
-                      • {sub.label}
-                    </button>
-                  ))}
-                </div>
-              ) : (
+        <div className="xl:hidden bg-space-950/95 backdrop-blur-2xl border-b border-cyan-500/30 px-5 pt-3 pb-6 space-y-3">
+          {/* Mobile Planet Selector */}
+          <div className="pb-3 border-b border-slate-800">
+            <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider mb-2">Target Body</div>
+            <div className="grid grid-cols-3 gap-2">
+              {['earth', 'moon', 'mars'].map((p) => (
                 <button
+                  key={p}
                   onClick={() => {
-                    setView(item.id);
+                    setActivePlanet(p);
+                    setView('explorer');
                     setMobileMenuOpen(false);
                   }}
-                  className={`block w-full text-left py-2 text-xs font-mono ${
-                    currentView === item.id ? 'text-cyan-300 font-bold' : 'text-slate-300'
+                  className={`py-2 px-3 rounded-lg text-xs font-mono capitalize transition ${
+                    activePlanet === p
+                      ? p === 'mars'
+                        ? 'bg-red-600 text-white font-bold'
+                        : p === 'moon'
+                        ? 'bg-slate-300 text-black font-bold'
+                        : 'bg-cyan-500 text-black font-bold'
+                      : 'bg-space-900 text-slate-300 border border-slate-800'
                   }`}
                 >
-                  {item.label}
+                  {p}
                 </button>
-              )}
+              ))}
             </div>
-          ))}
+          </div>
+
+          {/* Navigation Links */}
+          <div className="space-y-1">
+            {navItems.map((item) => (
+              <div key={item.id}>
+                {item.hasDropdown ? (
+                  <div className="space-y-1 pt-1">
+                    <div className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-wider py-1">
+                      {item.label}
+                    </div>
+                    {item.subItems.map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => {
+                          setView(sub.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`block w-full text-left pl-3 py-2 text-xs font-mono rounded-lg transition ${
+                          currentView === sub.id
+                            ? 'text-cyan-300 bg-cyan-950/60 font-bold border-l-2 border-cyan-400'
+                            : 'text-slate-300 hover:text-white hover:bg-space-900'
+                        }`}
+                      >
+                        • {sub.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setView(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`block w-full text-left py-2 px-2 text-xs font-mono rounded-lg transition ${
+                      currentView === item.id
+                        ? 'text-cyan-300 bg-cyan-950/60 font-bold'
+                        : 'text-slate-300 hover:text-white hover:bg-space-900'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </header>

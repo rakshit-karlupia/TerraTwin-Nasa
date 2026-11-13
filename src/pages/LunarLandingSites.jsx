@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Rocket, ShieldAlert, Sun, Radio, Compass, Mountain, Droplets, Eye, ArrowRight, ExternalLink } from 'lucide-react';
+import { Rocket, ShieldAlert, Sun, Radio, Compass, Mountain, Droplets, Eye, ArrowRight, ExternalLink, Globe } from 'lucide-react';
 import { LUNAR_REGIONS } from '../data/lunarRegions';
 import { formatCoordinates } from '../utils/coordinates';
 import TerrainRenderer from '../three/TerrainRenderer';
+import LocationImageGallery from '../components/location/LocationImageGallery';
 
 export default function LunarLandingSites({ setView, setSelectedLocation, setTargetReference }) {
   const [activeRegion, setActiveRegion] = useState(LUNAR_REGIONS[0]);
@@ -135,23 +136,40 @@ export default function LunarLandingSites({ setView, setSelectedLocation, setTar
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (setSelectedLocation) setSelectedLocation(activeRegion);
+                    setView('explorer');
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center space-x-1.5 shadow-glow-cyan transition"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Inspect on 3D Globe</span>
+                </button>
                 <button
                   onClick={() => setShowTerrainModal(true)}
-                  className="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center space-x-1.5 shadow-glow-cyan transition"
+                  className="px-3 py-1.5 rounded-lg bg-space-800 hover:bg-space-700 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-bold flex items-center space-x-1.5 transition"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>3D DEM Mesh</span>
                 </button>
                 <button
                   onClick={() => handleLaunchAnalogs(activeRegion)}
-                  className="px-3 py-1.5 rounded-lg bg-space-800 hover:bg-space-700 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-bold flex items-center space-x-1 transition"
+                  className="px-3 py-1.5 rounded-lg bg-space-800 hover:bg-space-700 text-slate-300 border border-slate-700 text-xs font-mono font-bold flex items-center space-x-1 transition"
                 >
                   <span>Find Analogs</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
+
+            {/* Genuine NASA LROC Regional Orbital Imagery */}
+            <LocationImageGallery
+              images={activeRegion.images || []}
+              locationName={activeRegion.name}
+              planetId="moon"
+            />
 
             {/* Assessment Metrics 4-Box */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

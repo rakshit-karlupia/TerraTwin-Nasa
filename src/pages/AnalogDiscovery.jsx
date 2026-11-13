@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Globe, Sliders, ArrowRight, ShieldCheck, Activity, Award, Eye, Compass, Info, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Globe, Sliders, ArrowRight, ShieldCheck, Activity, Award, Eye, Compass, Info, CheckCircle2, AlertCircle, Map } from 'lucide-react';
 import { LUNAR_REGIONS } from '../data/lunarRegions';
 import { MARS_REGIONS } from '../data/marsRegions';
 import { EARTH_CANDIDATES } from '../data/earthCandidates';
@@ -8,6 +8,7 @@ import { formatCoordinates } from '../utils/coordinates';
 import WeightSlidersPanel from '../components/panels/WeightSlidersPanel';
 import FeatureDifferenceChart from '../components/charts/FeatureDifferenceChart';
 import RadarChart from '../components/charts/RadarChart';
+import LocationImageGallery from '../components/location/LocationImageGallery';
 
 export default function AnalogDiscovery({
   targetReference,
@@ -54,6 +55,11 @@ export default function AnalogDiscovery({
   const handleInspectOnEarth = (candidateRaw) => {
     if (setSelectedLocation) setSelectedLocation(candidateRaw);
     setView('earth-map');
+  };
+
+  const handleInspectOnEarthGlobe = (candidateRaw) => {
+    if (setSelectedLocation) setSelectedLocation(candidateRaw);
+    setView('explorer');
   };
 
   const handleOpenComparisonLab = (candidateRaw) => {
@@ -263,6 +269,13 @@ export default function AnalogDiscovery({
                   </div>
                 </div>
 
+                {/* Genuine Regional Satellite / Aerial Imagery */}
+                <LocationImageGallery
+                  images={activeCandidateResult.raw?.images || []}
+                  locationName={activeCandidateResult.name}
+                  planetId="earth"
+                />
+
                 {/* Radar Comparison Chart */}
                 <div className="py-1 flex justify-center">
                   <RadarChart
@@ -293,13 +306,23 @@ export default function AnalogDiscovery({
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
-                  <button
-                    onClick={() => handleInspectOnEarth(activeCandidateResult.raw)}
-                    className="w-full py-2 px-3 rounded-xl bg-space-900 hover:bg-space-800 text-slate-300 border border-slate-700 text-xs font-medium flex items-center justify-center space-x-2 transition"
-                  >
-                    <Globe className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>View on 3D Earth Globe</span>
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleInspectOnEarthGlobe(activeCandidateResult.raw)}
+                      className="py-2 px-2 rounded-xl bg-space-900 hover:bg-space-800 text-slate-200 border border-slate-700 text-xs font-medium flex items-center justify-center space-x-1.5 transition"
+                    >
+                      <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>3D Globe</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleInspectOnEarth(activeCandidateResult.raw)}
+                      className="py-2 px-2 rounded-xl bg-space-900 hover:bg-space-800 text-slate-200 border border-slate-700 text-xs font-medium flex items-center justify-center space-x-1.5 transition"
+                    >
+                      <Map className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Global Map</span>
+                    </button>
+                  </div>
                 </div>
               </>
             ) : (

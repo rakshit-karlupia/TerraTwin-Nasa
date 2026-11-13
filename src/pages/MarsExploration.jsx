@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Rocket, ShieldAlert, Thermometer, Wind, Compass, Mountain, Droplets, Eye, ArrowRight, Layers } from 'lucide-react';
+import { Rocket, ShieldAlert, Thermometer, Wind, Compass, Mountain, Droplets, Eye, ArrowRight, Layers, Globe } from 'lucide-react';
 import { MARS_REGIONS } from '../data/marsRegions';
 import { formatCoordinates } from '../utils/coordinates';
 import TerrainRenderer from '../three/TerrainRenderer';
+import LocationImageGallery from '../components/location/LocationImageGallery';
 
 export default function MarsExploration({ setView, setSelectedLocation, setTargetReference }) {
   const [activeRegion, setActiveRegion] = useState(MARS_REGIONS[0]);
@@ -147,10 +148,20 @@ export default function MarsExploration({ setView, setSelectedLocation, setTarge
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => {
+                    if (setSelectedLocation) setSelectedLocation(activeRegion);
+                    setView('explorer');
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-mars-glow hover:bg-orange-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-glow-mars transition"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Inspect on 3D Globe</span>
+                </button>
                 <button
                   onClick={() => setShowTerrainModal(true)}
-                  className="px-3 py-1.5 rounded-lg bg-mars-glow hover:bg-orange-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-glow-mars transition"
+                  className="px-3 py-1.5 rounded-lg bg-space-800 hover:bg-space-700 text-slate-300 border border-slate-700 text-xs font-mono font-bold flex items-center space-x-1.5 transition"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>3D DEM Mesh</span>
@@ -159,11 +170,18 @@ export default function MarsExploration({ setView, setSelectedLocation, setTarge
                   onClick={() => handleLaunchAnalogs(activeRegion)}
                   className="px-3 py-1.5 rounded-lg bg-space-800 hover:bg-space-700 text-cyan-300 border border-cyan-500/30 text-xs font-mono font-bold flex items-center space-x-1 transition"
                 >
-                  <span>Find Earth Analogs</span>
+                  <span>Find Analogs</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
+
+            {/* Genuine NASA MRO HiRISE / CTX Regional Orbital Imagery */}
+            <LocationImageGallery
+              images={activeRegion.images || []}
+              locationName={activeRegion.name}
+              planetId="mars"
+            />
 
             {/* Assessment Metrics 4-Box */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
