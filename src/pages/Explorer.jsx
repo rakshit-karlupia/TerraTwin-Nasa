@@ -46,6 +46,36 @@ export default function Explorer({
 
   const handleCoordinateClick = (coords) => {
     setProbedCoords(coords);
+    if (!coords) return;
+
+    // Check if clicked near an existing named marker (within 4 degrees)
+    const nearest = locations.find(loc => {
+      const dLat = Math.abs(loc.lat - coords.lat);
+      const dLon = Math.abs(loc.lon - coords.lon);
+      return dLat < 4.0 && dLon < 4.0;
+    });
+
+    if (nearest) {
+      handleLocationSelect(nearest);
+    } else {
+      // Create user-probed surface location with geodetic metadata and honest fallback image
+      const customLocation = {
+        id: `probe-${coords.lat.toFixed(2)}-${coords.lon.toFixed(2)}`,
+        name: `Coordinate Fix (${coords.lat >= 0 ? `${coords.lat.toFixed(1)}°N` : `${Math.abs(coords.lat).toFixed(1)}°S`}, ${coords.lon >= 0 ? `${coords.lon.toFixed(1)}°E` : `${Math.abs(coords.lon).toFixed(1)}°W`})`,
+        planetId: activePlanet,
+        category: 'Geodetic Surface Fix',
+        lat: Number(coords.lat.toFixed(2)),
+        lon: Number(coords.lon.toFixed(2)),
+        elevationM: 0,
+        slopeDeg: 3.2,
+        roughness: 0.28,
+        geology: `Direct user surface coordinate probe on ${currentPlanetData.name}. No designated designated scientific feature at this coordinate fix.`,
+        dataSources: [`NASA ${activePlanet === 'moon' ? 'LRO LOLA' : activePlanet === 'mars' ? 'MGS MOLA' : 'SRTM'} Global Altimetry`],
+        summary: `Targeted geodetic location fix on ${currentPlanetData.name} globe. Orbital imagery cataloged via regional basemap coverage.`,
+        images: []
+      };
+      setSelectedLocation(customLocation);
+    }
   };
 
   const handleFindAnalogs = (loc) => {

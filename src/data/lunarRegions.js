@@ -20,6 +20,18 @@ export const LUNAR_REGIONS = [
     geology: 'Impact crater rim crest with shock-melt breccia; interior permanently shadowed cold trap hosting potential volatile deposit signature.',
     dataSources: ['LRO LOLA (GDR 128ppd)', 'LRO LROC WAC/NAC', 'LRO Diviner (Channel 8)', 'LEND Neutron Detector'],
     keyHazards: ['Extreme cliff slopes on inner crater wall (>32°)', 'Deep cryogenic shadows (40 K)', 'Line-of-sight obstruction during orbital nodes'],
+    images: [
+      {
+        type: 'Orbital View',
+        title: 'LROC Shackleton Rim & Interior Mosaic',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Shackleton_crater_LROC.jpg/800px-Shackleton_crater_LROC.jpg',
+        mission: 'Lunar Reconnaissance Orbiter (LRO)',
+        instrument: 'LROC NAC / WAC',
+        resolution: '1.0 m/pixel',
+        footprint: '89.9°S, 0.0°E (30 km x 30 km)',
+        credit: 'NASA / GSFC / Arizona State University'
+      }
+    ],
     summary: 'The South Pole baseline reference. High ridge peaks receive sustained seasonal solar illumination, while the 4.2 km deep interior remains in permanent shadow, maintaining cryogenic temperatures suitable for volatile preservation.'
   },
   {
@@ -43,6 +55,18 @@ export const LUNAR_REGIONS = [
     geology: 'Highland rolling terrain composed of Cabeus and Malapert distal ejecta blanket; proximate to LCROSS impact verification site.',
     dataSources: ['NASA LRO LOLA DEM', 'LRO LROC', 'LCROSS Impact Science Data'],
     keyHazards: ['Boulders from Cabeus B rim', 'Intermittent shadows during winter dips'],
+    images: [
+      {
+        type: 'Orbital View',
+        title: 'LROC Cabeus Crater Rim & Ejecta Blanket',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Cabeus_Crater_LROC.jpg/800px-Cabeus_Crater_LROC.jpg',
+        mission: 'Lunar Reconnaissance Orbiter (LRO)',
+        instrument: 'LROC WAC/NAC',
+        resolution: '2.0 m/pixel',
+        footprint: '84.9°S, 37.2°W',
+        credit: 'NASA / GSFC / Arizona State University'
+      }
+    ],
     summary: 'Located adjacent to Cabeus B crater. Proximity to LCROSS water-ice plume detection makes this a prime target for ground-truth volatile sampling.'
   },
   {
@@ -66,6 +90,18 @@ export const LUNAR_REGIONS = [
     geology: 'Rugged crater wall transition zone; immediate interface between low-illumination ridge and deep PSR floor trap.',
     dataSources: ['LRO LOLA', 'LRO Diviner', 'Mini-RF Radar'],
     keyHazards: ['Steep access slopes to floor', 'Low average illumination requires supplementary fuel cell/battery reserves'],
+    images: [
+      {
+        type: 'Orbital View',
+        title: 'LROC Haworth Rim & Interior Cold Trap',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Haworth_crater_LROC.png/800px-Haworth_crater_LROC.png',
+        mission: 'Lunar Reconnaissance Orbiter (LRO)',
+        instrument: 'LROC NAC Mosaic',
+        resolution: '1.2 m/pixel',
+        footprint: '87.4°S, 5.1°W',
+        credit: 'NASA / GSFC / Arizona State University'
+      }
+    ],
     summary: 'Offers minimal transit distance to permanently shadowed cold traps, allowing rapid sampling of cryogenic lunar volatiles.'
   },
   {
@@ -89,6 +125,18 @@ export const LUNAR_REGIONS = [
     geology: 'Ancient South Pole-Aitken (SPA) basin structural uplift. Composed of deep crustal anorthosite and impact-melt rocks.',
     dataSources: ['LRO LOLA', 'LROC NAC DEM', 'Kaguya Terrain Camera'],
     keyHazards: ['Flank drop-offs', 'Micrometeorite exposure at prominent summit'],
+    images: [
+      {
+        type: 'Orbital View',
+        title: 'LROC Malapert Massif Summit Uplift',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Malapert_mountain_LROC.png/800px-Malapert_mountain_LROC.png',
+        mission: 'Lunar Reconnaissance Orbiter (LRO)',
+        instrument: 'LROC NAC High-Sun Mosaic',
+        resolution: '0.8 m/pixel',
+        footprint: '86.0°S, 2.7°E',
+        credit: 'NASA / GSFC / Arizona State University'
+      }
+    ],
     summary: 'One of the highest and most continuously illuminated peaks on the lunar South Pole. Features near-continuous line-of-sight to Earth for direct communication.'
   },
   {

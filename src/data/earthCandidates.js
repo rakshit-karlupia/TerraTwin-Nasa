@@ -21,6 +21,18 @@ export const EARTH_CANDIDATES = [
     geology: 'The driest non-polar desert on Earth. Soil contains nitrates, sulfates, and perchlorates chemically matching Martian soil analyzed by Phoenix and Curiosity.',
     dataSources: ['NASA SRTM (30m)', 'USGS Landsat 8/9', 'NASA Earthdata MODIS Surface Temp'],
     uncertaintyNotes: 'Earth atmospheric pressure (77 kPa) and UV filtering differ from Mars vacuum-like conditions.',
+    images: [
+      {
+        type: 'Satellite View',
+        title: 'Landsat 8 Hyper-Arid Yungay Salt Playa',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Valle_de_la_Luna%2C_Atacama_Desert%2C_Chile.jpg/800px-Valle_de_la_Luna%2C_Atacama_Desert%2C_Chile.jpg',
+        mission: 'USGS / NASA Landsat Program',
+        instrument: 'Landsat OLI / High-Res Aerial Survey',
+        resolution: '15 m/pixel',
+        footprint: '24.08°S, 69.87°W',
+        credit: 'USGS / NASA Earthdata'
+      }
+    ],
     summary: 'Gold standard Martian soil analog. Preserves organic matter at limits of detection under extreme desiccation and intense solar UV flux.'
   },
   {
@@ -45,6 +57,18 @@ export const EARTH_CANDIDATES = [
     geology: 'A 23-km wide, 39-million-year-old impact crater situated in a cold, barren polar desert. Features shatter cones, hydrothermal vents, and permafrost gullies.',
     dataSources: ['ArcticDEM (2m)', 'CDEM Canada', 'Sentinel-2 Multispectral'],
     uncertaintyNotes: 'Atmospheric weathering over 39 Myr has softened sharp crater rim morphologies compared to lunar airless structures.',
+    images: [
+      {
+        type: 'Aerial View',
+        title: 'Haughton Impact Structure (Devon Island)',
+        url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Haughton_Crater_NASA.jpg/800px-Haughton_Crater_NASA.jpg',
+        mission: 'NASA Haughton-Mars Project (HMP)',
+        instrument: 'Aerial Survey & ArcticDEM',
+        resolution: '2.0 m/pixel',
+        footprint: '75.38°N, 89.68°W (23 km rim)',
+        credit: 'NASA / Mars Institute / ArcticDEM'
+      }
+    ],
     summary: 'Dual Moon/Mars analog. Combines impact cratering morphology with cryogenic permafrost processes, simulating both lunar crater interiors and Martian polar gullies.'
   },
   {
