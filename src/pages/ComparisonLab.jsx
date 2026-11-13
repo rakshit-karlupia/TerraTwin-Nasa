@@ -34,6 +34,7 @@ export default function ComparisonLab({
 
   const [activeTerrainMode, setActiveTerrainMode] = useState('profile'); // 'profile' or '3d'
   const [activeDemTarget, setActiveDemTarget] = useState('A'); // 'A' or 'B'
+  const [transectDirection, setTransectDirection] = useState('WE');
 
   const siteA = useMemo(() => allSites.find(s => s.id === siteAId) || allSites[0], [allSites, siteAId]);
   const siteB = useMemo(() => allSites.find(s => s.id === siteBId) || allSites[1], [allSites, siteBId]);
@@ -46,13 +47,13 @@ export default function ComparisonLab({
   // Elevation Cross-Section profiles for both sites
   const profileA = useMemo(() => {
     const dem = generateRegionDEM(siteA.id, 128);
-    return extractCrossSectionProfile(dem, 64);
-  }, [siteA]);
+    return extractCrossSectionProfile(dem, 64, transectDirection);
+  }, [siteA, transectDirection]);
 
   const profileB = useMemo(() => {
     const dem = generateRegionDEM(siteB.id, 128);
-    return extractCrossSectionProfile(dem, 64);
-  }, [siteB]);
+    return extractCrossSectionProfile(dem, 64, transectDirection);
+  }, [siteB, transectDirection]);
 
   // Downloadable report handler (JSON research artifact)
   const handleExportReport = () => {
@@ -331,6 +332,8 @@ export default function ComparisonLab({
                     profile={profileA}
                     title={`${siteA.name} (${siteA.body}) Transect`}
                     height={160}
+                    direction={transectDirection}
+                    onDirectionChange={setTransectDirection}
                   />
                 </div>
                 <div className="p-3 bg-space-900/60 rounded-xl border border-slate-800">
@@ -338,6 +341,8 @@ export default function ComparisonLab({
                     profile={profileB}
                     title={`${siteB.name} (${siteB.body}) Transect`}
                     height={160}
+                    direction={transectDirection}
+                    onDirectionChange={setTransectDirection}
                   />
                 </div>
               </div>

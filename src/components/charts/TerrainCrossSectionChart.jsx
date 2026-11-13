@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Mountain, Compass, ShieldAlert, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 /**
  * Interactive SVG Terrain Cross-Section Elevation Transect
+ * With multi-directional slicing, interactive probes, and geotechnical telemetry.
  */
 export default function TerrainCrossSectionChart({
   profile = [],
   width = 600,
   height = 200,
-  title = "Terrain Elevation Cross-Section Transect"
+  title = "Terrain Elevation Cross-Section Transect",
+  direction = 'WE',
+  onDirectionChange = null
 }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
@@ -20,9 +24,14 @@ export default function TerrainCrossSectionChart({
   const chartHeight = height - padding.top - padding.bottom;
 
   const elevations = profile.map(p => p.elevationM);
+  const slopes = profile.map(p => p.slopeDeg || 0);
+
   const minElev = Math.min(...elevations);
   const maxElev = Math.max(...elevations);
   const elevRange = Math.max(10, maxElev - minElev);
+
+  const meanSlope = (slopes.reduce((acc, s) => acc + s, 0) / slopes.length).toFixed(1);
+  const maxSlope = Math.max(...slopes).toFixed(1);
 
   const maxDist = profile[profile.length - 1].distanceKm;
 
@@ -38,12 +47,37 @@ export default function TerrainCrossSectionChart({
   const hoveredPoint = hoveredIndex !== null ? profile[hoveredIndex] : null;
 
   return (
-    <div className="w-full flex flex-col items-center">
-      <div className="w-full flex justify-between items-center mb-1 px-2">
-        <span className="text-xs font-mono font-semibold text-cyan-300 uppercase tracking-wider">{title}</span>
-        <span className="text-[11px] font-mono text-slate-400">Transect: {maxDist} km | Relief: {Math.round(elevRange)} m</span>
+    <div className="w-full flex flex-col space-y-2 select-none">
+      {/* Transect Header & Direction Switcher */}
+      <div className="w-full flex flex-wrap justify-between items-center px-1 gap-2">
+        <div className="flex items-center space-x-2">
+          <Mountain className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="text-xs font-mono font-semibold text-cyan-300 uppercase tracking-wider">{title}</span>
+        </div>
+
+        {onDirectionChange && (
+          <div className="flex items-center space-x-1 bg-space-950 p-0.5 rounded-lg border border-slate-800 text-[10px] font-mono">
+            {[
+              { id: 'WE', label: 'West → East' },
+              { id: 'NS', label: 'North → South' },
+              { id: 'diagonal', label: 'NW → SE' },
+              { id: 'radial', label: 'Radial' }
+            ].map(dir => (
+              <button
+                key={dir.id}
+                onClick={() => onDirectionChange(dir.id)}
+                className={`px-2 py-0.5 rounded transition ${
+                  direction === dir.id ? 'bg-cyan-500 text-black font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {dir.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* SVG Canvas */}
       <svg
         viewBox={`0 0 ${width} ${height}`}
         className="w-full h-auto select-none overflow-visible"
@@ -154,33 +188,63 @@ export default function TerrainCrossSectionChart({
               cx={getX(hoveredPoint.distanceKm)}
               cy={getY(hoveredPoint.elevationM)}
               r="5"
-              fill="#00f2fe"
+              fill={hoveredPoint.slopeDeg > 15 ? '#ef4444' : hoveredPoint.slopeDeg > 5 ? '#f59e0b' : '#10b981'}
               stroke="#ffffff"
               strokeWidth="2"
             />
             {/* Tooltip Box */}
-            <g transform={`translate(${Math.min(chartWidth, Math.max(70, getX(hoveredPoint.distanceKm)))}, ${padding.top + 20})`}>
+            <g transform={`translate(${Math.min(chartWidth, Math.max(75, getX(hoveredPoint.distanceKm)))}, ${padding.top + 20})`}>
               <rect
-                x="-65"
-                y="-25"
-                width="130"
-                height="34"
-                rx="4"
+                x="-75"
+                y="-30"
+                width="150"
+                height="42"
+                rx="6"
                 fill="#050b14"
-                stroke="#00f2fe"
+                stroke={hoveredPoint.slopeDeg > 15 ? '#ef4444' : '#00f2fe'}
                 strokeWidth="1"
                 className="shadow-glow-cyan"
               />
-              <text x="0" y="-10" textAnchor="middle" className="text-[10px] font-mono font-bold fill-white">
+              <text x="0" y="-12" textAnchor="middle" className="text-[11px] font-mono font-bold fill-white">
                 Elev: {hoveredPoint.elevationM > 0 ? `+${hoveredPoint.elevationM}` : hoveredPoint.elevationM} m
               </text>
               <text x="0" y="3" textAnchor="middle" className="text-[9px] font-mono fill-cyan-300">
                 Dist: {hoveredPoint.distanceKm} km | Slope: {hoveredPoint.slopeDeg}°
               </text>
+              <text
+                x="0"
+                y="15"
+                textAnchor="middle"
+                className={`text-[8px] font-mono font-bold ${
+                  hoveredPoint.slopeDeg > 15 ? 'fill-rose-400' : hoveredPoint.slopeDeg > 5 ? 'fill-amber-400' : 'fill-emerald-400'
+                }`}
+              >
+                {hoveredPoint.slopeDeg > 15 ? 'CRATER SCARP / HAZARD' : hoveredPoint.slopeDeg > 5 ? 'MODERATE TERRAIN' : 'LEVEL LANDING BASIN'}
+              </text>
             </g>
           </g>
         )}
       </svg>
+
+      {/* Geotechnical Telemetry Summary Bar */}
+      <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-mono bg-space-900/60 p-2 rounded-lg border border-slate-800">
+        <div>
+          <span className="text-slate-500 block">Baseline Relief</span>
+          <strong className="text-white">{Math.round(elevRange)} m</strong>
+        </div>
+        <div>
+          <span className="text-slate-500 block">Min / Max Elev</span>
+          <strong className="text-cyan-300">{minElev > 0 ? `+${minElev}` : minElev} / {maxElev > 0 ? `+${maxElev}` : maxElev} m</strong>
+        </div>
+        <div>
+          <span className="text-slate-500 block">Mean Slope</span>
+          <strong className="text-white">{meanSlope}°</strong>
+        </div>
+        <div>
+          <span className="text-slate-500 block">Peak Scarp</span>
+          <strong className={Number(maxSlope) > 15 ? 'text-rose-400' : 'text-emerald-400'}>{maxSlope}°</strong>
+        </div>
+      </div>
     </div>
   );
 }
