@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useRef } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Earth from './Earth';
@@ -15,9 +15,10 @@ export default function PlanetaryScene({
   onCoordinateClick,
   analogScores = {},
   autoRotate = false,
+  isResetting = false,
+  onResetComplete,
   className = "w-full h-full"
 }) {
-  const [isResetting, setIsResetting] = useState(false);
   const controlsRef = useRef();
 
   return (
@@ -77,12 +78,12 @@ export default function PlanetaryScene({
             />
           )}
 
-          {/* Camera Interpolator */}
+          {/* Camera Interpolator with Spherical Avoidance */}
           <CameraController
             targetLocation={selectedLocation}
             radius={2.5}
             isResetting={isResetting}
-            onResetComplete={() => setIsResetting(false)}
+            onResetComplete={onResetComplete}
           />
 
           {/* Standard Orbit Controls */}

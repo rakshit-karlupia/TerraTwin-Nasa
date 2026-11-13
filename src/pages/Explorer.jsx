@@ -18,6 +18,7 @@ export default function Explorer({
   setTargetReference
 }) {
   const [autoRotate, setAutoRotate] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [probedCoords, setProbedCoords] = useState(null);
   const [terrainModeActive, setTerrainModeActive] = useState(false);
   const [terrainRenderMode, setTerrainRenderMode] = useState('elevation');
@@ -79,6 +80,8 @@ export default function Explorer({
             onLocationSelect={handleLocationSelect}
             onCoordinateClick={handleCoordinateClick}
             autoRotate={autoRotate}
+            isResetting={isResetting}
+            onResetComplete={() => setIsResetting(false)}
           />
         )}
       </div>
@@ -206,8 +209,9 @@ export default function Explorer({
           <button
             onClick={() => {
               setSelectedLocation(null);
+              setIsResetting(true);
             }}
-            className="p-2 rounded-full bg-space-900 text-slate-400 hover:text-white transition"
+            className="p-2 rounded-full bg-space-900 text-slate-400 hover:text-white hover:bg-space-800 transition"
             title="Reset Camera Target"
           >
             <RotateCcw className="w-4 h-4" />

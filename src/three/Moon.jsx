@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import LocationMarker from './LocationMarker';
@@ -6,6 +6,15 @@ import { createMoonTexture, createBumpTexture } from '../utils/textureGenerator'
 import { createAtmosphereMaterial } from './AtmosphereShader';
 import { vector3ToLatLon } from '../utils/coordinates';
 
+/**
+ * Realistic 3D Lunar Globe
+ * Features:
+ *  - Lunar Highlands anorthositic crust & Basaltic Maria plains
+ *  - High-relief crater rims and South Pole Aitken basin
+ *  - Subtle exosphere scattering rim
+ *  - Artemis candidate landing site markers
+ *  - WebGL texture resource disposal
+ */
 export default function Moon({
   radius = 2.5,
   locations = [],
@@ -16,7 +25,7 @@ export default function Moon({
 }) {
   const moonRef = useRef();
 
-  // Generate Lunar textures
+  // Generate Lunar procedural textures
   const { moonTex, bumpTex } = useMemo(() => ({
     moonTex: createMoonTexture(2048, 1024),
     bumpTex: createBumpTexture(1024, 512, 6)
@@ -27,6 +36,15 @@ export default function Moon({
     return createAtmosphereMaterial('#b0c4de', 0.45, 5.5);
   }, []);
 
+  // Dispose textures on unmount to prevent WebGL memory leaks
+  useEffect(() => {
+    return () => {
+      moonTex.dispose();
+      bumpTex.dispose();
+      atmosphereMaterial.dispose();
+    };
+  }, [moonTex, bumpTex, atmosphereMaterial]);
+
   useFrame((state, delta) => {
     if (autoRotate && moonRef.current) {
       moonRef.current.rotation.y += delta * 0.02;
@@ -36,14 +54,15 @@ export default function Moon({
   const handlePointerDown = (e) => {
     e.stopPropagation();
     if (onCoordinateClick && e.point) {
-      const coords = vector3ToLatLon(e.point, radius);
+      const localPoint = moonRef.current ? moonRef.current.worldToLocal(e.point.clone()) : e.point;
+      const coords = vector3ToLatLon(localPoint, radius);
       onCoordinateClick(coords);
     }
   };
 
   return (
-    <group>
-      {/* Primary Lunar Sphere */}
+    <group rotation={[0.027, 0, 0]}>
+      {/* Primary Lunar Sphere with subtle lunar axial tilt (1.54°) */}
       <mesh
         ref={moonRef}
         onPointerDown={handlePointerDown}

@@ -3,6 +3,11 @@ import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { latLonToVector3 } from '../utils/coordinates';
 
+/**
+ * CameraController smoothly animates camera position and lookAt target.
+ * It uses spherical avoidance to ensure the camera gracefully orbits around
+ * the globe rather than clipping through the planet's core.
+ */
 export default function CameraController({
   targetLocation,
   radius = 2.5,
@@ -20,10 +25,10 @@ export default function CameraController({
 
   useEffect(() => {
     if (targetLocation) {
-      // Calculate 3D position of target location
+      // Calculate 3D surface position of the targeted coordinate
       const surfacePos = latLonToVector3(targetLocation.lat, targetLocation.lon, radius);
       
-      // Position camera along the vector pointing out from the sphere
+      // Position camera along the outward normal at 1.85x radius distance
       const camOffset = surfacePos.clone().normalize().multiplyScalar(radius * 1.85);
       
       targetCamPosRef.current.copy(camOffset);
@@ -43,8 +48,14 @@ export default function CameraController({
   useFrame((state, delta) => {
     if (animatingRef.current) {
       // Smooth damp interpolation
-      const step = Math.min(1.0, delta * 3.2);
+      const step = Math.min(1.0, delta * 3.4);
       camera.position.lerp(targetCamPosRef.current, step);
+
+      // Spherical floor: prevent camera from ever cutting below the surface
+      const minAltitude = radius * 1.45;
+      if (camera.position.length() < minAltitude) {
+        camera.position.setLength(minAltitude);
+      }
 
       if (controls) {
         controls.target.lerp(targetLookAtRef.current, step);
@@ -53,8 +64,11 @@ export default function CameraController({
         camera.lookAt(targetLookAtRef.current);
       }
 
-      // Check if animation has settled
-      if (camera.position.distanceTo(targetCamPosRef.current) < 0.05) {
+      // Check if animation has settled close to destination
+      if (
+        camera.position.distanceTo(targetCamPosRef.current) < 0.04 &&
+        (!controls || controls.target.distanceTo(targetLookAtRef.current) < 0.04)
+      ) {
         animatingRef.current = false;
         if (isResetting && onResetComplete) {
           onResetComplete();

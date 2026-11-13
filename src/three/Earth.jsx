@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import LocationMarker from './LocationMarker';
@@ -6,6 +6,15 @@ import { createEarthDayTexture, createEarthNightTexture, createEarthCloudsTextur
 import { createAtmosphereMaterial } from './AtmosphereShader';
 import { vector3ToLatLon } from '../utils/coordinates';
 
+/**
+ * Realistic 3D Earth Globe
+ * Features:
+ *  - High-definition day & night city lights
+ *  - Dynamic clouds layer drifting with atmospheric circulation
+ *  - GLSL Rayleigh scattering atmospheric glow shell
+ *  - Real geodetic location markers
+ *  - Proper disposal of WebGL textures on unmount
+ */
 export default function Earth({
   radius = 2.5,
   locations = [],
@@ -18,7 +27,7 @@ export default function Earth({
   const earthRef = useRef();
   const cloudsRef = useRef();
 
-  // Generate HD textures
+  // Generate procedural HD textures
   const { dayTex, nightTex, cloudsTex, bumpTex } = useMemo(() => ({
     dayTex: createEarthDayTexture(2048, 1024),
     nightTex: createEarthNightTexture(1024, 512),
@@ -26,31 +35,44 @@ export default function Earth({
     bumpTex: createBumpTexture(1024, 512, 5)
   }), []);
 
-  // Atmospheric Glow Shader
+  // Atmospheric Scattering Shader
   const atmosphereMaterial = useMemo(() => {
     return createAtmosphereMaterial('#00d2ff', 0.55, 3.8);
   }, []);
+
+  // Dispose textures and materials on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      dayTex.dispose();
+      nightTex.dispose();
+      cloudsTex.dispose();
+      bumpTex.dispose();
+      atmosphereMaterial.dispose();
+    };
+  }, [dayTex, nightTex, cloudsTex, bumpTex, atmosphereMaterial]);
 
   useFrame((state, delta) => {
     if (autoRotate && earthRef.current) {
       earthRef.current.rotation.y += delta * 0.04;
     }
     if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * 0.055; // Clouds drift slightly faster than planet
+      cloudsRef.current.rotation.y += delta * 0.055; // Atmospheric drift
     }
   });
 
   const handlePointerDown = (e) => {
     e.stopPropagation();
     if (onCoordinateClick && e.point) {
-      const coords = vector3ToLatLon(e.point, radius);
+      // Compensate for group rotation or local position
+      const localPoint = earthRef.current ? earthRef.current.worldToLocal(e.point.clone()) : e.point;
+      const coords = vector3ToLatLon(localPoint, radius);
       onCoordinateClick(coords);
     }
   };
 
   return (
-    <group>
-      {/* Primary Earth Sphere */}
+    <group rotation={[0.409, 0, 0]}>
+      {/* Primary Earth Sphere with realistic axial tilt (23.4°) */}
       <mesh
         ref={earthRef}
         onPointerDown={handlePointerDown}
@@ -84,7 +106,7 @@ export default function Earth({
         })}
       </mesh>
 
-      {/* Cloud Layer */}
+      {/* Cloud Layer drifting around planet */}
       <mesh ref={cloudsRef}>
         <sphereGeometry args={[radius + 0.025, 48, 48]} />
         <meshStandardMaterial
