@@ -56,9 +56,6 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
               <span className="font-display font-extrabold tracking-wider text-lg text-white group-hover:text-cyan-300 transition">
                 TERRATWIN
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-bold tracking-wider">
-                NASA MVP
-              </span>
             </div>
             <div className="text-[9px] font-mono tracking-widest text-slate-400 -mt-0.5 uppercase">
               Planetary Intelligence Platform
@@ -139,42 +136,6 @@ export default function Header({ currentView, setView, activePlanet, setActivePl
             );
           })}
         </nav>
-
-        {/* Planet Quick Switcher & Telemetry Status */}
-        <div className="hidden sm:flex items-center space-x-3">
-          <div className="flex items-center bg-space-900/90 rounded-xl p-1 border border-cyan-500/20">
-            {['earth', 'moon', 'mars'].map((p) => (
-              <button
-                key={p}
-                onClick={() => {
-                  setActivePlanet(p);
-                  if (currentView === 'home') setView('explorer');
-                }}
-                className={`px-3 py-1 rounded-lg text-[11px] font-mono capitalize transition-all ${
-                  activePlanet === p
-                    ? p === 'mars'
-                      ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold shadow-glow-mars'
-                      : p === 'moon'
-                      ? 'bg-gradient-to-r from-slate-200 to-slate-400 text-black font-bold'
-                      : 'bg-cyan-500 text-black font-bold shadow-glow-cyan'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span className="text-[10px] font-mono text-emerald-400 hidden lg:inline tracking-wider">
-              ONLINE
-            </span>
-          </div>
-        </div>
 
         {/* Mobile Menu Button */}
         <button
