@@ -1,61 +1,115 @@
-import React from 'react';
-import { ArrowRight, Compass, Globe, Rocket, ShieldCheck, Database, Mountain, Activity, Layers } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, Compass, Globe, Rocket, ShieldCheck, Database, Mountain, Activity, Layers, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 import PlanetaryScene from '../three/PlanetaryScene';
 import { PLANETS } from '../data/planets';
 
 export default function Home({ setView, setActivePlanet }) {
+  const [heroPlanet, setHeroPlanet] = useState('earth');
+
+  const handleHeroPlanetChange = (planet) => {
+    setHeroPlanet(planet);
+    setActivePlanet(planet);
+  };
+
   return (
     <div className="relative min-h-screen bg-space-950 text-slate-100 select-none">
       {/* Hero Section with Interactive 3D Planet Background */}
-      <div className="relative h-[90vh] w-full flex items-center justify-center overflow-hidden">
-        {/* 3D Earth Canvas as Background */}
-        <div className="absolute inset-0 z-0 opacity-80 pointer-events-auto">
+      <div className="relative h-[92vh] w-full flex items-center justify-center overflow-hidden">
+        {/* 3D Planet Canvas as Background */}
+        <div className="absolute inset-0 z-0 opacity-85 pointer-events-auto">
           <PlanetaryScene
-            activePlanet="earth"
+            activePlanet={heroPlanet}
             locations={[]}
             autoRotate={true}
           />
         </div>
 
         {/* Ambient Dark Gradient Vignette for Readability */}
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-space-950 via-space-950/40 to-space-950/70 pointer-events-none" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-space-950 via-space-950/45 to-space-950/75 pointer-events-none" />
+
+        {/* Floating Hero Planet Selector */}
+        <div className="absolute top-6 z-20 flex items-center bg-space-900/80 backdrop-blur-xl border border-cyan-500/30 rounded-full p-1.5 shadow-2xl">
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-3 hidden sm:inline">
+            Active Body:
+          </span>
+          <div className="flex space-x-1">
+            {['earth', 'moon', 'mars'].map((planet) => (
+              <button
+                key={planet}
+                onClick={() => handleHeroPlanetChange(planet)}
+                className={`px-3.5 py-1 rounded-full text-xs font-mono capitalize transition-all ${
+                  heroPlanet === planet
+                    ? planet === 'mars'
+                      ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold shadow-glow-mars'
+                      : planet === 'moon'
+                      ? 'bg-gradient-to-r from-slate-200 to-slate-400 text-black font-bold'
+                      : 'bg-cyan-500 text-black font-bold shadow-glow-cyan'
+                    : 'text-slate-300 hover:text-white hover:bg-space-800/80'
+                }`}
+              >
+                {planet === 'earth' ? '🌍 Earth' : planet === 'moon' ? '🌕 Moon' : '🔴 Mars'}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Hero Content Overlay */}
-        <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-6">
-          <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-space-900/90 border border-cyan-400/40 text-cyan-300 text-xs font-mono tracking-widest shadow-glow-cyan animate-pulse-slow">
-            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+        <div className="relative z-20 max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-6 pt-12">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-space-900/90 border border-cyan-400/40 text-cyan-300 text-xs font-mono tracking-widest shadow-glow-cyan"
+          >
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
             <span>NASA SPACE APPS CHALLENGE 2026 // GEOSPATIAL INTELLIGENCE</span>
-          </div>
+          </motion.div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold font-display tracking-tight text-white leading-none">
+          <motion.h1
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-4xl sm:text-6xl lg:text-7xl font-extrabold font-display tracking-tight text-white leading-none"
+          >
             EARTH IS OUR TESTING GROUND.<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400">
               SPACE IS OUR DESTINATION.
             </span>
-          </h1>
+          </motion.h1>
 
-          <p className="max-w-3xl mx-auto text-base sm:text-lg text-slate-300 font-sans leading-relaxed">
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="max-w-3xl mx-auto text-base sm:text-lg text-slate-300 font-sans leading-relaxed"
+          >
             Discover Earth’s most extraordinary landscapes that resemble the environments of the Moon and Mars
             through planetary science, geospatial intelligence, and transparent environmental analysis.
-          </p>
+          </motion.p>
 
           {/* Call to Actions */}
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex flex-wrap items-center justify-center gap-4 pt-2"
+          >
             <button
               onClick={() => {
-                setActivePlanet('earth');
+                setActivePlanet(heroPlanet);
                 setView('explorer');
               }}
-              className="px-6 py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm flex items-center space-x-2 shadow-glow-cyan transition-all transform hover:-translate-y-0.5"
+              className="px-6 py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm flex items-center space-x-2 shadow-glow-cyan transition-all transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <Compass className="w-4 h-4" />
-              <span>Explore Planetary 3D</span>
+              <span>Explore {heroPlanet.toUpperCase()} in 3D</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
             <button
               onClick={() => setView('analogs')}
-              className="px-6 py-3.5 rounded-xl bg-space-900/90 hover:bg-space-800 text-cyan-300 border border-cyan-500/40 font-semibold text-sm flex items-center space-x-2 transition-all transform hover:-translate-y-0.5"
+              className="px-6 py-3.5 rounded-xl bg-space-900/90 hover:bg-space-800 text-cyan-300 border border-cyan-500/40 font-semibold text-sm flex items-center space-x-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
             >
               <Globe className="w-4 h-4" />
               <span>Discover Earth Analogs</span>
@@ -63,39 +117,47 @@ export default function Home({ setView, setActivePlanet }) {
 
             <button
               onClick={() => setView('lunar-missions')}
-              className="px-6 py-3.5 rounded-xl bg-space-900/90 hover:bg-space-800 text-slate-200 border border-slate-700 font-semibold text-sm flex items-center space-x-2 transition-all transform hover:-translate-y-0.5"
+              className="px-6 py-3.5 rounded-xl bg-space-900/90 hover:bg-space-800 text-slate-200 border border-slate-700 font-semibold text-sm flex items-center space-x-2 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
             >
-              <Rocket className="w-4 h-4 text-mars-glow" />
+              <Rocket className="w-4 h-4 text-orange-400" />
               <span>Artemis III Landing Sites</span>
             </button>
-          </div>
+          </motion.div>
 
           {/* Quick Stats Banner */}
-          <div className="pt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
-            <div className="glass-panel p-3.5 rounded-xl border border-slate-800">
-              <div className="text-[10px] font-mono text-cyan-400 uppercase">3 Planetary Bodies</div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="pt-6 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto text-left"
+          >
+            <div className="glass-panel p-3.5 rounded-xl border border-cyan-500/20 backdrop-blur-md">
+              <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">3 Planetary Bodies</div>
               <div className="text-xl font-bold font-display text-white mt-0.5">Earth, Moon, Mars</div>
             </div>
-            <div className="glass-panel p-3.5 rounded-xl border border-slate-800">
-              <div className="text-[10px] font-mono text-cyan-400 uppercase">Artemis III Candidates</div>
+            <div className="glass-panel p-3.5 rounded-xl border border-cyan-500/20 backdrop-blur-md">
+              <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">Artemis III Candidates</div>
               <div className="text-xl font-bold font-display text-white mt-0.5">9 NASA Regions (Oct '24)</div>
             </div>
-            <div className="glass-panel p-3.5 rounded-xl border border-slate-800">
-              <div className="text-[10px] font-mono text-cyan-400 uppercase">Earth Analogs Cataloged</div>
+            <div className="glass-panel p-3.5 rounded-xl border border-cyan-500/20 backdrop-blur-md">
+              <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">Earth Analogs Cataloged</div>
               <div className="text-xl font-bold font-display text-white mt-0.5">11 Global Sites</div>
             </div>
-            <div className="glass-panel p-3.5 rounded-xl border border-slate-800">
-              <div className="text-[10px] font-mono text-cyan-400 uppercase">Scoring Methodology</div>
+            <div className="glass-panel p-3.5 rounded-xl border border-cyan-500/20 backdrop-blur-md">
+              <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">Scoring Methodology</div>
               <div className="text-xl font-bold font-display text-white mt-0.5">Weighted Normalized D</div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Core Platform Pillars */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-3 mb-16">
-          <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest">Architectural Overview</div>
+          <div className="text-xs font-mono text-cyan-400 uppercase tracking-widest flex items-center justify-center space-x-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Mission Control Architecture</span>
+          </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white font-display">
             Three Integrated Planetary Systems
           </h2>
@@ -106,9 +168,9 @@ export default function Home({ setView, setActivePlanet }) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Card 1: 3D Planetary Explorer */}
-          <div className="glass-panel-glow p-8 rounded-2xl border border-cyan-500/30 flex flex-col justify-between hover:border-cyan-400 transition-all duration-300">
+          <div className="glass-panel-glow p-8 rounded-2xl border border-cyan-500/30 flex flex-col justify-between hover:border-cyan-400 transition-all duration-300 group">
             <div>
-              <div className="w-12 h-12 rounded-xl bg-space-900 border border-cyan-400 flex items-center justify-center text-cyan-300 mb-6 shadow-glow-cyan">
+              <div className="w-12 h-12 rounded-xl bg-space-900 border border-cyan-400 flex items-center justify-center text-cyan-300 mb-6 shadow-glow-cyan group-hover:scale-105 transition-transform">
                 <Globe className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-white font-display mb-3">
@@ -124,7 +186,7 @@ export default function Home({ setView, setActivePlanet }) {
                 setActivePlanet('moon');
                 setView('explorer');
               }}
-              className="flex items-center space-x-2 text-cyan-400 hover:text-cyan-300 font-mono text-xs font-bold pt-4 border-t border-slate-800/80"
+              className="flex items-center space-x-2 text-cyan-400 hover:text-cyan-300 font-mono text-xs font-bold pt-4 border-t border-slate-800/80 group-hover:translate-x-1 transition-transform"
             >
               <span>Launch 3D Explorer</span>
               <ArrowRight className="w-4 h-4" />
@@ -132,9 +194,9 @@ export default function Home({ setView, setActivePlanet }) {
           </div>
 
           {/* Card 2: Future Landing Site Intelligence */}
-          <div className="glass-panel-glow p-8 rounded-2xl border border-mars-glow/40 flex flex-col justify-between hover:border-mars-glow transition-all duration-300">
+          <div className="glass-panel-glow p-8 rounded-2xl border border-red-500/30 flex flex-col justify-between hover:border-red-400 transition-all duration-300 group">
             <div>
-              <div className="w-12 h-12 rounded-xl bg-space-900 border border-mars-glow flex items-center justify-center text-mars-glow mb-6 shadow-glow-mars">
+              <div className="w-12 h-12 rounded-xl bg-space-900 border border-red-500 flex items-center justify-center text-red-400 mb-6 shadow-glow-mars group-hover:scale-105 transition-transform">
                 <Rocket className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-white font-display mb-3">
@@ -147,7 +209,7 @@ export default function Home({ setView, setActivePlanet }) {
             </div>
             <button
               onClick={() => setView('lunar-missions')}
-              className="flex items-center space-x-2 text-mars-glow hover:text-orange-400 font-mono text-xs font-bold pt-4 border-t border-slate-800/80"
+              className="flex items-center space-x-2 text-red-400 hover:text-red-300 font-mono text-xs font-bold pt-4 border-t border-slate-800/80 group-hover:translate-x-1 transition-transform"
             >
               <span>Inspect Landing Regions</span>
               <ArrowRight className="w-4 h-4" />
@@ -155,9 +217,9 @@ export default function Home({ setView, setActivePlanet }) {
           </div>
 
           {/* Card 3: Explainable Earth Analog Discovery */}
-          <div className="glass-panel-glow p-8 rounded-2xl border border-emerald-500/30 flex flex-col justify-between hover:border-emerald-400 transition-all duration-300">
+          <div className="glass-panel-glow p-8 rounded-2xl border border-emerald-500/30 flex flex-col justify-between hover:border-emerald-400 transition-all duration-300 group">
             <div>
-              <div className="w-12 h-12 rounded-xl bg-space-900 border border-emerald-400 flex items-center justify-center text-emerald-400 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-space-900 border border-emerald-400 flex items-center justify-center text-emerald-400 mb-6 group-hover:scale-105 transition-transform">
                 <Activity className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-white font-display mb-3">
@@ -170,7 +232,7 @@ export default function Home({ setView, setActivePlanet }) {
             </div>
             <button
               onClick={() => setView('analogs')}
-              className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 font-mono text-xs font-bold pt-4 border-t border-slate-800/80"
+              className="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 font-mono text-xs font-bold pt-4 border-t border-slate-800/80 group-hover:translate-x-1 transition-transform"
             >
               <span>Run Analog Analysis</span>
               <ArrowRight className="w-4 h-4" />
