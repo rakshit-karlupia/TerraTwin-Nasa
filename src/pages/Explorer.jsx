@@ -3,7 +3,6 @@ import { Compass, RotateCcw, Play, Pause, Layers, Eye, Globe, Info, Search } fro
 import PlanetaryScene from '../three/PlanetaryScene';
 import TerrainRenderer from '../three/TerrainRenderer';
 import LocationDetailPanel from '../components/panels/LocationDetailPanel';
-import ScientificLayerPanel from '../components/panels/ScientificLayerPanel';
 import { PLANETS } from '../data/planets';
 import { LUNAR_REGIONS } from '../data/lunarRegions';
 import { MARS_REGIONS } from '../data/marsRegions';
@@ -19,14 +18,11 @@ export default function Explorer({
   setTargetReference
 }) {
   const [autoRotate, setAutoRotate] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
   const [probedCoords, setProbedCoords] = useState(null);
   const [terrainModeActive, setTerrainModeActive] = useState(false);
   const [terrainRenderMode, setTerrainRenderMode] = useState('elevation');
   const [terrainProbe, setTerrainProbe] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeLayer, setActiveLayer] = useState('natural');
-  const [layerOpacity, setLayerOpacity] = useState(0.85);
 
   const currentPlanetData = PLANETS[activePlanet] || PLANETS.earth;
 
@@ -49,36 +45,6 @@ export default function Explorer({
 
   const handleCoordinateClick = (coords) => {
     setProbedCoords(coords);
-    if (!coords) return;
-
-    // Check if clicked near an existing named marker (within 4 degrees)
-    const nearest = locations.find(loc => {
-      const dLat = Math.abs(loc.lat - coords.lat);
-      const dLon = Math.abs(loc.lon - coords.lon);
-      return dLat < 4.0 && dLon < 4.0;
-    });
-
-    if (nearest) {
-      handleLocationSelect(nearest);
-    } else {
-      // Create user-probed surface location with geodetic metadata and honest fallback image
-      const customLocation = {
-        id: `probe-${coords.lat.toFixed(2)}-${coords.lon.toFixed(2)}`,
-        name: `Coordinate Fix (${coords.lat >= 0 ? `${coords.lat.toFixed(1)}°N` : `${Math.abs(coords.lat).toFixed(1)}°S`}, ${coords.lon >= 0 ? `${coords.lon.toFixed(1)}°E` : `${Math.abs(coords.lon).toFixed(1)}°W`})`,
-        planetId: activePlanet,
-        category: 'Geodetic Surface Fix',
-        lat: Number(coords.lat.toFixed(2)),
-        lon: Number(coords.lon.toFixed(2)),
-        elevationM: 0,
-        slopeDeg: 3.2,
-        roughness: 0.28,
-        geology: `Direct user surface coordinate probe on ${currentPlanetData.name}. No designated designated scientific feature at this coordinate fix.`,
-        dataSources: [`NASA ${activePlanet === 'moon' ? 'LRO LOLA' : activePlanet === 'mars' ? 'MGS MOLA' : 'SRTM'} Global Altimetry`],
-        summary: `Targeted geodetic location fix on ${currentPlanetData.name} globe. Orbital imagery cataloged via regional basemap coverage.`,
-        images: []
-      };
-      setSelectedLocation(customLocation);
-    }
   };
 
   const handleFindAnalogs = (loc) => {
@@ -113,10 +79,6 @@ export default function Explorer({
             onLocationSelect={handleLocationSelect}
             onCoordinateClick={handleCoordinateClick}
             autoRotate={autoRotate}
-            isResetting={isResetting}
-            onResetComplete={() => setIsResetting(false)}
-            activeLayer={activeLayer}
-            layerOpacity={layerOpacity}
           />
         )}
       </div>
@@ -186,17 +148,6 @@ export default function Explorer({
           </div>
         </div>
 
-        {/* Scientific Layer Control Panel (in Planetary Globe mode) */}
-        {!terrainModeActive && (
-          <ScientificLayerPanel
-            activeLayer={activeLayer}
-            onSelectLayer={setActiveLayer}
-            layerOpacity={layerOpacity}
-            onChangeOpacity={setLayerOpacity}
-            planetId={activePlanet}
-          />
-        )}
-
         {/* Terrain Shader Mode Controls (when terrain mode is active) */}
         {terrainModeActive && (
           <div className="glass-panel p-3 rounded-xl border border-cyan-500/30 space-y-2">
@@ -255,9 +206,8 @@ export default function Explorer({
           <button
             onClick={() => {
               setSelectedLocation(null);
-              setIsResetting(true);
             }}
-            className="p-2 rounded-full bg-space-900 text-slate-400 hover:text-white hover:bg-space-800 transition"
+            className="p-2 rounded-full bg-space-900 text-slate-400 hover:text-white transition"
             title="Reset Camera Target"
           >
             <RotateCcw className="w-4 h-4" />

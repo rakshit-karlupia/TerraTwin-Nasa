@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useState, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import Earth from './Earth';
@@ -15,12 +15,9 @@ export default function PlanetaryScene({
   onCoordinateClick,
   analogScores = {},
   autoRotate = false,
-  isResetting = false,
-  onResetComplete,
-  activeLayer = 'natural',
-  layerOpacity = 0.85,
   className = "w-full h-full"
 }) {
+  const [isResetting, setIsResetting] = useState(false);
   const controlsRef = useRef();
 
   return (
@@ -57,8 +54,6 @@ export default function PlanetaryScene({
               onCoordinateClick={onCoordinateClick}
               analogScores={analogScores}
               autoRotate={autoRotate}
-              activeLayer={activeLayer}
-              layerOpacity={layerOpacity}
             />
           )}
 
@@ -69,8 +64,6 @@ export default function PlanetaryScene({
               onLocationSelect={onLocationSelect}
               onCoordinateClick={onCoordinateClick}
               autoRotate={autoRotate}
-              activeLayer={activeLayer}
-              layerOpacity={layerOpacity}
             />
           )}
 
@@ -81,17 +74,15 @@ export default function PlanetaryScene({
               onLocationSelect={onLocationSelect}
               onCoordinateClick={onCoordinateClick}
               autoRotate={autoRotate}
-              activeLayer={activeLayer}
-              layerOpacity={layerOpacity}
             />
           )}
 
-          {/* Camera Interpolator with Spherical Avoidance */}
+          {/* Camera Interpolator */}
           <CameraController
             targetLocation={selectedLocation}
             radius={2.5}
             isResetting={isResetting}
-            onResetComplete={onResetComplete}
+            onResetComplete={() => setIsResetting(false)}
           />
 
           {/* Standard Orbit Controls */}

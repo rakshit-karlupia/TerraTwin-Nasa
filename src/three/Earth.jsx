@@ -1,21 +1,11 @@
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import LocationMarker from './LocationMarker';
-import { createEarthDayTexture, createEarthNightTexture, createEarthCloudsTexture, createBumpTexture, createScientificLayerTexture } from '../utils/textureGenerator';
+import { createEarthDayTexture, createEarthNightTexture, createEarthCloudsTexture, createBumpTexture } from '../utils/textureGenerator';
 import { createAtmosphereMaterial } from './AtmosphereShader';
 import { vector3ToLatLon } from '../utils/coordinates';
 
-/**
- * Realistic 3D Earth Globe
- * Features:
- *  - High-definition day & night city lights
- *  - Dynamic clouds layer drifting with atmospheric circulation
- *  - Scientific data overlays (elevation, slope, thermal, water-ice, roughness)
- *  - GLSL Rayleigh scattering atmospheric glow shell
- *  - Real geodetic location markers
- *  - Proper disposal of WebGL textures on unmount
- */
 export default function Earth({
   radius = 2.5,
   locations = [],
@@ -23,14 +13,12 @@ export default function Earth({
   onLocationSelect,
   onCoordinateClick,
   analogScores = {},
-  autoRotate = false,
-  activeLayer = 'natural',
-  layerOpacity = 0.85
+  autoRotate = false
 }) {
   const earthRef = useRef();
   const cloudsRef = useRef();
 
-  // Generate procedural HD textures
+  // Generate HD textures
   const { dayTex, nightTex, cloudsTex, bumpTex } = useMemo(() => ({
     dayTex: createEarthDayTexture(2048, 1024),
     nightTex: createEarthNightTexture(1024, 512),
@@ -38,51 +26,31 @@ export default function Earth({
     bumpTex: createBumpTexture(1024, 512, 5)
   }), []);
 
-  // Scientific data overlay
-  const scientificTex = useMemo(() => {
-    if (activeLayer === 'natural') return null;
-    return createScientificLayerTexture('earth', activeLayer, 1024, 512);
-  }, [activeLayer]);
-
-  // Atmospheric Scattering Shader
+  // Atmospheric Glow Shader
   const atmosphereMaterial = useMemo(() => {
     return createAtmosphereMaterial('#00d2ff', 0.55, 3.8);
   }, []);
-
-  // Dispose textures and materials on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      dayTex.dispose();
-      nightTex.dispose();
-      cloudsTex.dispose();
-      bumpTex.dispose();
-      atmosphereMaterial.dispose();
-      if (scientificTex) scientificTex.dispose();
-    };
-  }, [dayTex, nightTex, cloudsTex, bumpTex, atmosphereMaterial, scientificTex]);
 
   useFrame((state, delta) => {
     if (autoRotate && earthRef.current) {
       earthRef.current.rotation.y += delta * 0.04;
     }
     if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * 0.055; // Atmospheric drift
+      cloudsRef.current.rotation.y += delta * 0.055; // Clouds drift slightly faster than planet
     }
   });
 
   const handlePointerDown = (e) => {
     e.stopPropagation();
     if (onCoordinateClick && e.point) {
-      // Compensate for group rotation or local position
-      const localPoint = earthRef.current ? earthRef.current.worldToLocal(e.point.clone()) : e.point;
-      const coords = vector3ToLatLon(localPoint, radius);
+      const coords = vector3ToLatLon(e.point, radius);
       onCoordinateClick(coords);
     }
   };
 
   return (
-    <group rotation={[0.409, 0, 0]}>
-      {/* Primary Earth Sphere with realistic axial tilt (23.4°) */}
+    <group>
+      {/* Primary Earth Sphere */}
       <mesh
         ref={earthRef}
         onPointerDown={handlePointerDown}
@@ -98,20 +66,6 @@ export default function Earth({
           emissive={new THREE.Color('#ffc107')}
           emissiveIntensity={0.25}
         />
-
-        {/* Scientific Thematic Layer Overlay */}
-        {scientificTex && (
-          <mesh>
-            <sphereGeometry args={[radius * 1.002, 64, 64]} />
-            <meshStandardMaterial
-              map={scientificTex}
-              transparent
-              opacity={layerOpacity}
-              blending={THREE.NormalBlending}
-              depthWrite={false}
-            />
-          </mesh>
-        )}
 
         {/* Location Markers for Earth Analogs */}
         {locations.map((loc) => {
@@ -130,13 +84,13 @@ export default function Earth({
         })}
       </mesh>
 
-      {/* Cloud Layer drifting around planet */}
+      {/* Cloud Layer */}
       <mesh ref={cloudsRef}>
         <sphereGeometry args={[radius + 0.025, 48, 48]} />
         <meshStandardMaterial
           map={cloudsTex}
           transparent
-          opacity={activeLayer === 'natural' ? 0.85 : 0.35}
+          opacity={0.85}
           blending={THREE.NormalBlending}
           depthWrite={false}
         />
