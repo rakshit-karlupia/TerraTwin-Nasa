@@ -3,6 +3,7 @@ import { Compass, RotateCcw, Play, Pause, Layers, Eye, Globe, Info, Search } fro
 import PlanetaryScene from '../three/PlanetaryScene';
 import TerrainRenderer from '../three/TerrainRenderer';
 import LocationDetailPanel from '../components/panels/LocationDetailPanel';
+import ScientificLayerPanel from '../components/panels/ScientificLayerPanel';
 import { PLANETS } from '../data/planets';
 import { LUNAR_REGIONS } from '../data/lunarRegions';
 import { MARS_REGIONS } from '../data/marsRegions';
@@ -24,6 +25,8 @@ export default function Explorer({
   const [terrainRenderMode, setTerrainRenderMode] = useState('elevation');
   const [terrainProbe, setTerrainProbe] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeLayer, setActiveLayer] = useState('natural');
+  const [layerOpacity, setLayerOpacity] = useState(0.85);
 
   const currentPlanetData = PLANETS[activePlanet] || PLANETS.earth;
 
@@ -112,6 +115,8 @@ export default function Explorer({
             autoRotate={autoRotate}
             isResetting={isResetting}
             onResetComplete={() => setIsResetting(false)}
+            activeLayer={activeLayer}
+            layerOpacity={layerOpacity}
           />
         )}
       </div>
@@ -180,6 +185,17 @@ export default function Explorer({
             </button>
           </div>
         </div>
+
+        {/* Scientific Layer Control Panel (in Planetary Globe mode) */}
+        {!terrainModeActive && (
+          <ScientificLayerPanel
+            activeLayer={activeLayer}
+            onSelectLayer={setActiveLayer}
+            layerOpacity={layerOpacity}
+            onChangeOpacity={setLayerOpacity}
+            planetId={activePlanet}
+          />
+        )}
 
         {/* Terrain Shader Mode Controls (when terrain mode is active) */}
         {terrainModeActive && (

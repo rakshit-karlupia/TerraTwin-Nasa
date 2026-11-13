@@ -17,6 +17,8 @@ export default function PlanetaryScene({
   autoRotate = false,
   isResetting = false,
   onResetComplete,
+  activeLayer = 'natural',
+  layerOpacity = 0.85,
   className = "w-full h-full"
 }) {
   const controlsRef = useRef();
@@ -55,6 +57,8 @@ export default function PlanetaryScene({
               onCoordinateClick={onCoordinateClick}
               analogScores={analogScores}
               autoRotate={autoRotate}
+              activeLayer={activeLayer}
+              layerOpacity={layerOpacity}
             />
           )}
 
@@ -65,6 +69,8 @@ export default function PlanetaryScene({
               onLocationSelect={onLocationSelect}
               onCoordinateClick={onCoordinateClick}
               autoRotate={autoRotate}
+              activeLayer={activeLayer}
+              layerOpacity={layerOpacity}
             />
           )}
 
@@ -75,6 +81,8 @@ export default function PlanetaryScene({
               onLocationSelect={onLocationSelect}
               onCoordinateClick={onCoordinateClick}
               autoRotate={autoRotate}
+              activeLayer={activeLayer}
+              layerOpacity={layerOpacity}
             />
           )}
 

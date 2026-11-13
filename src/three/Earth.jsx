@@ -2,7 +2,7 @@ import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import LocationMarker from './LocationMarker';
-import { createEarthDayTexture, createEarthNightTexture, createEarthCloudsTexture, createBumpTexture } from '../utils/textureGenerator';
+import { createEarthDayTexture, createEarthNightTexture, createEarthCloudsTexture, createBumpTexture, createScientificLayerTexture } from '../utils/textureGenerator';
 import { createAtmosphereMaterial } from './AtmosphereShader';
 import { vector3ToLatLon } from '../utils/coordinates';
 
@@ -11,6 +11,7 @@ import { vector3ToLatLon } from '../utils/coordinates';
  * Features:
  *  - High-definition day & night city lights
  *  - Dynamic clouds layer drifting with atmospheric circulation
+ *  - Scientific data overlays (elevation, slope, thermal, water-ice, roughness)
  *  - GLSL Rayleigh scattering atmospheric glow shell
  *  - Real geodetic location markers
  *  - Proper disposal of WebGL textures on unmount
@@ -22,7 +23,9 @@ export default function Earth({
   onLocationSelect,
   onCoordinateClick,
   analogScores = {},
-  autoRotate = false
+  autoRotate = false,
+  activeLayer = 'natural',
+  layerOpacity = 0.85
 }) {
   const earthRef = useRef();
   const cloudsRef = useRef();
@@ -34,6 +37,12 @@ export default function Earth({
     cloudsTex: createEarthCloudsTexture(1024, 512),
     bumpTex: createBumpTexture(1024, 512, 5)
   }), []);
+
+  // Scientific data overlay
+  const scientificTex = useMemo(() => {
+    if (activeLayer === 'natural') return null;
+    return createScientificLayerTexture('earth', activeLayer, 1024, 512);
+  }, [activeLayer]);
 
   // Atmospheric Scattering Shader
   const atmosphereMaterial = useMemo(() => {
@@ -48,8 +57,9 @@ export default function Earth({
       cloudsTex.dispose();
       bumpTex.dispose();
       atmosphereMaterial.dispose();
+      if (scientificTex) scientificTex.dispose();
     };
-  }, [dayTex, nightTex, cloudsTex, bumpTex, atmosphereMaterial]);
+  }, [dayTex, nightTex, cloudsTex, bumpTex, atmosphereMaterial, scientificTex]);
 
   useFrame((state, delta) => {
     if (autoRotate && earthRef.current) {
@@ -89,6 +99,20 @@ export default function Earth({
           emissiveIntensity={0.25}
         />
 
+        {/* Scientific Thematic Layer Overlay */}
+        {scientificTex && (
+          <mesh>
+            <sphereGeometry args={[radius * 1.002, 64, 64]} />
+            <meshStandardMaterial
+              map={scientificTex}
+              transparent
+              opacity={layerOpacity}
+              blending={THREE.NormalBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        )}
+
         {/* Location Markers for Earth Analogs */}
         {locations.map((loc) => {
           const sim = analogScores[loc.id] !== undefined ? analogScores[loc.id] : null;
@@ -112,7 +136,7 @@ export default function Earth({
         <meshStandardMaterial
           map={cloudsTex}
           transparent
-          opacity={0.85}
+          opacity={activeLayer === 'natural' ? 0.85 : 0.35}
           blending={THREE.NormalBlending}
           depthWrite={false}
         />

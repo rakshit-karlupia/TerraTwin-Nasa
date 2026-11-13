@@ -2,7 +2,7 @@ import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import LocationMarker from './LocationMarker';
-import { createMarsTexture, createBumpTexture } from '../utils/textureGenerator';
+import { createMarsTexture, createBumpTexture, createScientificLayerTexture } from '../utils/textureGenerator';
 import { createAtmosphereMaterial } from './AtmosphereShader';
 import { vector3ToLatLon } from '../utils/coordinates';
 
@@ -12,6 +12,7 @@ import { vector3ToLatLon } from '../utils/coordinates';
  *  - Iron-oxide ochre basemap with dark albedo features (Syrtis Major, Acidalia)
  *  - Geological features: Olympus Mons elevation, Valles Marineris canyon rift
  *  - North & South perennial polar caps (H2O and CO2 frost)
+ *  - Scientific thematic data overlays (elevation, slope, thermal, water-ice, roughness)
  *  - Thin salmon-orange atmospheric dust haze shell
  *  - Mars research landing site markers
  *  - WebGL texture resource disposal
@@ -22,7 +23,9 @@ export default function Mars({
   selectedLocation = null,
   onLocationSelect,
   onCoordinateClick,
-  autoRotate = false
+  autoRotate = false,
+  activeLayer = 'natural',
+  layerOpacity = 0.85
 }) {
   const marsRef = useRef();
 
@@ -31,6 +34,12 @@ export default function Mars({
     marsTex: createMarsTexture(2048, 1024),
     bumpTex: createBumpTexture(1024, 512, 6)
   }), []);
+
+  // Generate scientific overlay if active
+  const scientificTex = useMemo(() => {
+    if (activeLayer === 'natural') return null;
+    return createScientificLayerTexture('mars', activeLayer, 1024, 512);
+  }, [activeLayer]);
 
   // Thin Martian salmon-orange atmospheric haze shader
   const atmosphereMaterial = useMemo(() => {
@@ -43,8 +52,9 @@ export default function Mars({
       marsTex.dispose();
       bumpTex.dispose();
       atmosphereMaterial.dispose();
+      if (scientificTex) scientificTex.dispose();
     };
-  }, [marsTex, bumpTex, atmosphereMaterial]);
+  }, [marsTex, bumpTex, atmosphereMaterial, scientificTex]);
 
   useFrame((state, delta) => {
     if (autoRotate && marsRef.current) {
@@ -76,6 +86,20 @@ export default function Mars({
           roughness={0.88}
           metalness={0.08}
         />
+
+        {/* Scientific Thematic Layer Overlay */}
+        {scientificTex && (
+          <mesh>
+            <sphereGeometry args={[radius * 1.002, 64, 64]} />
+            <meshStandardMaterial
+              map={scientificTex}
+              transparent
+              opacity={layerOpacity}
+              blending={THREE.NormalBlending}
+              depthWrite={false}
+            />
+          </mesh>
+        )}
 
         {/* Mars Exploration Zones Markers */}
         {locations.map((loc) => (
