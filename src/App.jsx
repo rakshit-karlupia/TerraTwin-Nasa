@@ -88,6 +88,8 @@ export default function App() {
           <CandidateComparison
             setView={setView}
             setTargetReference={setTargetReference}
+            setSelectedLocation={setSelectedLocation}
+            setActivePlanet={setActivePlanet}
           />
         )}
 

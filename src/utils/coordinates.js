@@ -61,3 +61,32 @@ export function calculateSurfaceDistanceKm(lat1, lon1, lat2, lon2, planetRadiusK
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return planetRadiusKm * c;
 }
+
+/**
+ * Returns Coordinate Reference System (CRS) and vertical datum metadata for a planetary body.
+ */
+export function getCRSByPlanet(planetId = 'mars') {
+  const p = (planetId || '').toLowerCase();
+  if (p === 'moon') {
+    return {
+      name: 'IAU 2000 Moon',
+      datum: 'IAU 2000 Moon Spherical Coordinate System',
+      ellipsoid: 'Mean Moon Sphere (R = 1,737.4 km)',
+      verticalDatum: 'LOLA Lunar Topography Model Zero-Datum'
+    };
+  }
+  if (p === 'mars') {
+    return {
+      name: 'IAU 2000 Mars',
+      datum: 'IAU 2000 Mars Planetocentric',
+      ellipsoid: 'MOLA Reference Areoid (a = 3,396.19 km, b = 3,376.20 km)',
+      verticalDatum: 'MOLA Topographic Areoid Datum (0m = 610.5 Pa)'
+    };
+  }
+  return {
+    name: 'WGS 84 (EPSG:4326)',
+    datum: 'World Geodetic System 1984',
+    ellipsoid: 'WGS 84 Reference Ellipsoid',
+    verticalDatum: 'EGM96 Earth Geoid (Mean Sea Level)'
+  };
+}

@@ -1,19 +1,48 @@
 import React, { useState, useMemo } from 'react';
-import { GitCompare, ArrowRight, ShieldCheck, Sun, Compass, Mountain, Droplets, Radio } from 'lucide-react';
+import { GitCompare, ArrowRight, ShieldCheck, Sun, Compass, Mountain, Droplets, Radio, Globe, ExternalLink } from 'lucide-react';
 import { LUNAR_REGIONS } from '../data/lunarRegions';
 import { MARS_REGIONS } from '../data/marsRegions';
-import { formatCoordinates } from '../utils/coordinates';
+import { formatCoordinates, getCRSByPlanet } from '../utils/coordinates';
 import RadarChart from '../components/charts/RadarChart';
+import ImageComparisonSlider from '../components/location/ImageComparisonSlider';
 
-export default function CandidateComparison({ setView, setTargetReference }) {
+export default function CandidateComparison({
+  setView,
+  setTargetReference,
+  setSelectedLocation,
+  setActivePlanet
+}) {
   const [selectedBody, setSelectedBody] = useState('moon');
   const sites = selectedBody === 'moon' ? LUNAR_REGIONS : MARS_REGIONS;
 
   const [site1Id, setSite1Id] = useState(sites[0].id);
   const [site2Id, setSite2Id] = useState(sites[1]?.id || sites[0].id);
 
-  const site1 = useMemo(() => sites.find(s => s.id === site1Id) || sites[0], [sites, site1Id]);
-  const site2 = useMemo(() => sites.find(s => s.id === site2Id) || sites[1] || sites[0], [sites, site2Id]);
+  const rawSite1 = useMemo(() => sites.find(s => s.id === site1Id) || sites[0], [sites, site1Id]);
+  const rawSite2 = useMemo(() => sites.find(s => s.id === site2Id) || sites[1] || sites[0], [sites, site2Id]);
+
+  const site1 = useMemo(() => ({ ...rawSite1, body: selectedBody === 'moon' ? 'Moon' : 'Mars' }), [rawSite1, selectedBody]);
+  const site2 = useMemo(() => ({ ...rawSite2, body: selectedBody === 'moon' ? 'Moon' : 'Mars' }), [rawSite2, selectedBody]);
+
+  const crs = getCRSByPlanet(selectedBody);
+
+  // Delta calculations
+  const elevDelta = Math.abs((site1.elevationM ?? 0) - (site2.elevationM ?? 0));
+  const slopeDelta = Math.abs((site1.slopeDeg ?? 0) - (site2.slopeDeg ?? 0)).toFixed(1);
+  const roughnessDelta = Math.abs((site1.roughness ?? 0.35) - (site2.roughness ?? 0.35)).toFixed(2);
+  const reliefDelta = Math.abs((site1.reliefM ?? 500) - (site2.reliefM ?? 500));
+
+  const handleInspectOnGlobe = (candidate) => {
+    if (setActivePlanet) setActivePlanet(selectedBody);
+    if (setSelectedLocation) setSelectedLocation(candidate);
+    if (setView) setView('explorer');
+  };
+
+  const handleLaunchInLab = () => {
+    if (setTargetReference) setTargetReference(site1);
+    if (setSelectedLocation) setSelectedLocation(site2);
+    if (setView) setView('compare-lab');
+  };
 
   return (
     <div className="min-h-screen bg-space-950 text-slate-100 py-8 px-4 sm:px-6 lg:px-8 select-none">
@@ -34,31 +63,41 @@ export default function CandidateComparison({ setView, setTargetReference }) {
             </p>
           </div>
 
-          {/* Planet Switcher */}
-          <div className="flex items-center space-x-2 bg-space-900 p-1 rounded-xl border border-slate-800">
+          {/* Planet Switcher & Lab Link */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center space-x-2 bg-space-900 p-1 rounded-xl border border-slate-800">
+              <button
+                onClick={() => {
+                  setSelectedBody('moon');
+                  setSite1Id(LUNAR_REGIONS[0].id);
+                  setSite2Id(LUNAR_REGIONS[3].id);
+                }}
+                className={`px-3 py-1.5 text-xs font-mono rounded-lg transition ${
+                  selectedBody === 'moon' ? 'bg-slate-200 text-black font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Moon (Artemis III)
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedBody('mars');
+                  setSite1Id(MARS_REGIONS[0].id);
+                  setSite2Id(MARS_REGIONS[1].id);
+                }}
+                className={`px-3 py-1.5 text-xs font-mono rounded-lg transition ${
+                  selectedBody === 'mars' ? 'bg-mars-glow text-white font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Mars (Exploration Zones)
+              </button>
+            </div>
+
             <button
-              onClick={() => {
-                setSelectedBody('moon');
-                setSite1Id(LUNAR_REGIONS[0].id);
-                setSite2Id(LUNAR_REGIONS[3].id);
-              }}
-              className={`px-3 py-1.5 text-xs font-mono rounded-lg transition ${
-                selectedBody === 'moon' ? 'bg-slate-200 text-black font-bold' : 'text-slate-400 hover:text-white'
-              }`}
+              onClick={handleLaunchInLab}
+              className="px-3.5 py-2 rounded-xl bg-space-900 hover:bg-space-800 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold flex items-center space-x-2 transition shadow-glow-cyan"
             >
-              Moon (Artemis III)
-            </button>
-            <button
-              onClick={() => {
-                setSelectedBody('mars');
-                setSite1Id(MARS_REGIONS[0].id);
-                setSite2Id(MARS_REGIONS[1].id);
-              }}
-              className={`px-3 py-1.5 text-xs font-mono rounded-lg transition ${
-                selectedBody === 'mars' ? 'bg-mars-glow text-white font-bold' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Mars (Exploration Zones)
+              <GitCompare className="w-3.5 h-3.5" />
+              <span>Open in Comparison Lab</span>
             </button>
           </div>
         </div>
@@ -92,17 +131,53 @@ export default function CandidateComparison({ setView, setTargetReference }) {
           </div>
         </div>
 
+        {/* FEATURE 8: Draggable Imagery Curtain & Side-by-Side View */}
+        <ImageComparisonSlider siteA={site1} siteB={site2} />
+
+        {/* Parameter Delta Telemetry Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-space-900/80 p-3 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Elevation Delta (Δh)</span>
+            <span className="text-base font-bold font-mono text-white mt-0.5 block">{elevDelta} m</span>
+            <span className="text-[10px] font-mono text-cyan-400">{crs.verticalDatum}</span>
+          </div>
+          <div className="bg-space-900/80 p-3 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Slope Delta (Δθ)</span>
+            <span className="text-base font-bold font-mono text-white mt-0.5 block">{slopeDelta}°</span>
+            <span className="text-[10px] font-mono text-emerald-400">{slopeDelta < 3 ? 'Safe landing delta (<3°)' : 'Significant gradient delta'}</span>
+          </div>
+          <div className="bg-space-900/80 p-3 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Roughness Delta (ΔR)</span>
+            <span className="text-base font-bold font-mono text-white mt-0.5 block">{roughnessDelta}</span>
+            <span className="text-[10px] font-mono text-slate-400">Scale index [0-1]</span>
+          </div>
+          <div className="bg-space-900/80 p-3 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] font-mono text-slate-400 uppercase block">Relief Delta (ΔΔz)</span>
+            <span className="text-base font-bold font-mono text-white mt-0.5 block">~{reliefDelta} m</span>
+            <span className="text-[10px] font-mono text-slate-400">5km baseline</span>
+          </div>
+        </div>
+
         {/* Detailed Side-by-Side Trade-off Table */}
         <div className="glass-panel rounded-2xl overflow-hidden border border-slate-800">
           <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-800">
             {/* Candidate 1 */}
             <div className="p-6 space-y-4">
-              <div>
-                <span className="text-xs font-mono uppercase text-mars-glow font-bold">{site1.officialStatus}</span>
-                <h3 className="text-2xl font-bold font-display text-white mt-0.5">{site1.name}</h3>
-                <div className="text-xs font-mono text-slate-400 mt-1">
-                  Coordinates: <strong className="text-white">{formatCoordinates(site1.lat, site1.lon)}</strong>
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-xs font-mono uppercase text-mars-glow font-bold">{site1.officialStatus}</span>
+                  <h3 className="text-2xl font-bold font-display text-white mt-0.5">{site1.name}</h3>
+                  <div className="text-xs font-mono text-slate-400 mt-1">
+                    Coordinates: <strong className="text-white">{formatCoordinates(site1.lat, site1.lon)}</strong>
+                  </div>
                 </div>
+                <button
+                  onClick={() => handleInspectOnGlobe(site1)}
+                  className="px-2.5 py-1.5 rounded-lg bg-space-900 hover:bg-space-800 border border-mars-glow/40 text-mars-glow text-xs font-mono flex items-center space-x-1.5 transition"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>3D Globe</span>
+                </button>
               </div>
 
               <div className="space-y-2 text-xs font-mono">
@@ -162,12 +237,21 @@ export default function CandidateComparison({ setView, setTargetReference }) {
 
             {/* Candidate 2 */}
             <div className="p-6 space-y-4">
-              <div>
-                <span className="text-xs font-mono uppercase text-cyan-400 font-bold">{site2.officialStatus}</span>
-                <h3 className="text-2xl font-bold font-display text-white mt-0.5">{site2.name}</h3>
-                <div className="text-xs font-mono text-slate-400 mt-1">
-                  Coordinates: <strong className="text-white">{formatCoordinates(site2.lat, site2.lon)}</strong>
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-xs font-mono uppercase text-cyan-400 font-bold">{site2.officialStatus}</span>
+                  <h3 className="text-2xl font-bold font-display text-white mt-0.5">{site2.name}</h3>
+                  <div className="text-xs font-mono text-slate-400 mt-1">
+                    Coordinates: <strong className="text-white">{formatCoordinates(site2.lat, site2.lon)}</strong>
+                  </div>
                 </div>
+                <button
+                  onClick={() => handleInspectOnGlobe(site2)}
+                  className="px-2.5 py-1.5 rounded-lg bg-space-900 hover:bg-space-800 border border-cyan-500/40 text-cyan-300 text-xs font-mono flex items-center space-x-1.5 transition"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>3D Globe</span>
+                </button>
               </div>
 
               <div className="space-y-2 text-xs font-mono">
